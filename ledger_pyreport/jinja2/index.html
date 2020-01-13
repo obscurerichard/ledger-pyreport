@@ -1,0 +1,46 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>ledger-pyreport</title>
+	</head>
+	<body>
+		<ul>
+			<li><form action="{{ url_for('trial') }}">
+				<button type="submit">Trial balance</button>
+				Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
+			</form></li>
+			
+			<li><form action="{{ url_for('balance') }}">
+				<button type="submit">Balance sheet</button>
+				Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
+			</form></li>
+			
+			<li><form action="{{ url_for('pandl') }}">
+				<button type="submit">Income statement</button>
+				Begin date: <input name="date_beg" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				End date: <input name="date_end" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
+			</form></li>
+		</ul>
+	</body>
+</html>

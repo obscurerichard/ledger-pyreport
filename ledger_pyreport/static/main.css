@@ -1,0 +1,68 @@
+/*
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+body {
+	font-family: 'TeX Gyre Termes', 'Nimbus Roman', 'Times New Roman', 'Liberation Serif', Times, serif;
+}
+
+h1 {
+	text-align: center;
+	font-size: x-large;
+	font-weight: bold;
+	margin: 0;
+}
+
+h2 {
+	text-align: center;
+	font-size: medium;
+	font-weight: normal;
+	margin: 0.2em 0 1em 0;
+}
+
+table.ledger {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+table.ledger td, table.ledger th {
+	padding: 2px 2px 2px 2px;
+}
+
+table.ledger th {
+	text-align: left;
+}
+table.ledger th.h1 {
+	text-align: center;
+}
+
+table.ledger tr.total td {
+	font-weight: bold;
+	
+	border-top: 1pt solid black;
+	border-bottom: 1pt solid black;
+}
+
+table.two-amounts tr td:nth-child(2), table.two-amounts tr td:nth-child(3) {
+	text-align: right;
+}
+
+@media screen {
+	body {
+		padding: 2em;
+	}
+}

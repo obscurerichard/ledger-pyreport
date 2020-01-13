@@ -1,0 +1,13 @@
+ledger_file: /path/to/ledger.journal
+ledger_args: ['--pedantic', '--recursive-aliases']
+report_currency: $
+
+assets_account: Assets
+liabilities_account: Liabilities
+equity_account: Equity
+income_account: Income
+expenses_account: Expenses
+
+unrealized_gains: 'Equity:Unrealized Gains'
+retained_earnings: 'Equity:Retained Earnings'
+current_year_earnings: 'Equity:Current Year Earnings'

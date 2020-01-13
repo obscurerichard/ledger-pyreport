@@ -1,0 +1,51 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Trial Balance as at {{ date.strftime('%d %B %Y') }}</title>
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+	</head>
+	<body>
+		<h1>Trial Balance</h1>
+		<h2>As at {{ date.strftime('%d %B %Y') }}</h2>
+		
+		<table class="ledger two-amounts">
+			<tr>
+				<th></th>
+				<th class="h1">Dr</th>
+				<th class="h1">Cr</th>
+			</tr>
+			{% for account in accounts %}
+				<tr>
+					<td>{{ account.name }}</td>
+					<td>{% if account.balance > 0 %}{{ account.balance|b }}{% endif %}</td>
+					<td>{% if account.balance < 0 %}{{ -account.balance|b }}{% endif %}</td>
+				</tr>
+			{% endfor %}
+			<tr class="total">
+				<td></td>
+				<td>{{ total_dr|b }}</td>
+				<td>{{ total_cr|b }}</td>
+			</tr>
+		</table>
+	</body>
+</html>
