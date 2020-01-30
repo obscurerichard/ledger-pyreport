@@ -80,10 +80,10 @@ def pandl():
 @app.template_filter('a')
 def filter_amount(amt):
 	if amt > 0:
-		return flask.Markup('{:,}&nbsp;'.format(amt).replace(',', '&#8239;')) # Narrow no-break space
+		return flask.Markup('{:,.2f}&nbsp;'.format(amt).replace(',', '&#8239;')) # Narrow no-break space
 	else:
-		return flask.Markup('({:,})'.format(-amt).replace(',', '&#8239;'))
+		return flask.Markup('({:,.2f})'.format(-amt).replace(',', '&#8239;'))
 
 @app.template_filter('b')
 def filter_amount_positive(amt):
-	return flask.Markup('{:,}'.format(amt).replace(',', '&#8239;'))
+	return flask.Markup('{:,.2f}'.format(amt).replace(',', '&#8239;'))
