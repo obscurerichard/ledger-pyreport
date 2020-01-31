@@ -1,13 +1,19 @@
+# Set up how we will call Ledger
 ledger_file: /path/to/ledger.journal
 ledger_args: ['--pedantic', '--recursive-aliases']
 report_currency: $
 
+# Tell ledger-pyreport about the top-level account categories
 assets_account: Assets
 liabilities_account: Liabilities
 equity_account: Equity
 income_account: Income
 expenses_account: Expenses
 
+# These accounts will automatically be populated on reports
 unrealized_gains: 'Equity:Unrealized Gains'
 retained_earnings: 'Equity:Retained Earnings'
 current_year_earnings: 'Equity:Current Year Earnings'
+
+# Which asset accounts to consider in cash basis mode
+cash_asset_accounts: ['Assets:Cash on Hand', 'Assets:Cash at Bank']
