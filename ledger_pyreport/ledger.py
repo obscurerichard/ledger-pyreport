@@ -25,7 +25,10 @@ with open('config.yml', 'r') as f:
 	config = yaml.safe_load(f)
 
 class Account:
-	def __init__(self, name, balance):
+	def __init__(self, name, balance=None):
+		if balance is None:
+			balance = Decimal(0)
+		
 		self.name = name
 		self.balance = balance
 		
@@ -92,6 +95,11 @@ def make_account_tree(accounts):
 def aregex(account):
 	return '^{0}:|^{0}$'.format(account)
 
+def amatch(needle, haystack):
+	if haystack == needle or haystack.startswith(needle + ':'):
+		return True
+	return False
+
 def financial_year(date):
 	pstart = date.replace(day=1, month=7)
 	if pstart > date:
@@ -109,7 +117,7 @@ def unrealized_gains(date):
 	return unrealized_gains
 
 # Get account balances at date
-def get_accounts(date):
+def get_accounts(date, cash=False):
 	# Calculate Unrealized Gains
 	unrealized_gains_amt = unrealized_gains(date)
 	
@@ -121,16 +129,30 @@ def get_accounts(date):
 	accounts.append(Account(config['unrealized_gains'], -unrealized_gains_amt))
 	accounts.sort(key=lambda a: a.name)
 	
+	# Convert to cash basis
+	if cash:
+		accounts_map = make_account_tree(accounts)
+		
+		for account in accounts[:]:
+			if amatch(config['liabilities_account'], account.name) or (amatch(config['assets_account'], account.name) and not any(amatch(x, account.name) for x in config['cash_asset_accounts'])):
+				drcr = parse_balance(run_ledger_date(date, 'balance', '--related', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--cost' if amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name) else '--market', aregex(account.name)))
+				
+				for drcr_account in drcr:
+					accounts_map[drcr_account.name].balance -= drcr_account.balance
+				
+				accounts.remove(account)
+				del accounts_map[account.name]
+	
 	return accounts
 
 # Calculate trial balance
-def trial_balance(date, pstart):
+def trial_balance(date, pstart, cash=False):
 	# Get balances at period start
-	accounts_pstart = get_accounts(pstart - timedelta(days=1))
+	accounts_pstart = get_accounts(pstart - timedelta(days=1), cash)
 	accounts_map_pstart = make_account_tree(accounts_pstart)
 	
 	# Get balances at date
-	accounts = get_accounts(date)
+	accounts = get_accounts(date, cash)
 	
 	# Adjust Retained Earnings
 	total_pandl = Decimal(0)
@@ -143,8 +165,18 @@ def trial_balance(date, pstart):
 	
 	# Adjust income/expense accounts
 	for account in accounts:
-		if account.name == config['income_account'] or account.name.startswith(config['income_account'] + ':') or account.name == config['expenses_account'] or account.name.startswith(config['expenses_account'] + ':'):
+		if amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name):
 			if account.name in accounts_map_pstart:
 				account.balance -= accounts_map_pstart[account.name].balance
+	
+	return accounts
+
+# Calculate profit and loss
+def pandl(date_beg, date_end, cash=False):
+	accounts = trial_balance(date_end, date_beg, cash)
+	
+	for account in accounts[:]:
+		if not (amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name)):
+			accounts.remove(account)
 	
 	return accounts

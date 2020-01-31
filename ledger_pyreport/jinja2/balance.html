@@ -61,27 +61,29 @@
 			</tr>
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
-			<tr><th class="h1" colspan="2">Liabilities</th></tr>
-			
-			{% for liability_class in liabilities.children %}
-				<tr><th class="h2" colspan="2">{{ liability_class.name_parts[-1] }} Liabilities</th></tr>
-				{{ walk_children(liability_class.children, acc_level=1, invert=True) }}
+			{% if not cash %}
+				<tr><th class="h1" colspan="2">Liabilities</th></tr>
+				
+				{% for liability_class in liabilities.children %}
+					<tr><th class="h2" colspan="2">{{ liability_class.name_parts[-1] }} Liabilities</th></tr>
+					{{ walk_children(liability_class.children, acc_level=1, invert=True) }}
+					<tr class="total">
+						<td>Total {{ liability_class.name_parts[-1] }} Liabilities</td>
+						<td>{{ -liability_class.total()|a }}</td>
+					</tr>
+					<tr><td colspan="2">&nbsp;</td></tr>
+				{% endfor %}
+				
 				<tr class="total">
-					<td>Total {{ liability_class.name_parts[-1] }} Liabilities</td>
-					<td>{{ -liability_class.total()|a }}</td>
+					<td>Total Liabilities</td>
+					<td>{{ -liabilities.total()|a }}</td>
+				</tr>
+				<tr class="total">
+					<td>Net Assets</td>
+					<td>{{ (assets.total() + liabilities.total())|a }}</td>
 				</tr>
 				<tr><td colspan="2">&nbsp;</td></tr>
-			{% endfor %}
-			
-			<tr class="total">
-				<td>Total Liabilities</td>
-				<td>{{ -liabilities.total()|a }}</td>
-			</tr>
-			<tr class="total">
-				<td>Net Assets</td>
-				<td>{{ (assets.total() + liabilities.total())|a }}</td>
-			</tr>
-			<tr><td colspan="2">&nbsp;</td></tr>
+			{% endif %}
 			
 			<tr><th class="h1" colspan="2">Equity</th></tr>
 			

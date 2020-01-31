@@ -26,20 +26,23 @@
 		<ul>
 			<li><form action="{{ url_for('trial') }}">
 				<button type="submit">Trial balance</button>
-				Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
-				Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label><input name="cash" type="checkbox"> Cash basis</label>
 			</form></li>
 			
 			<li><form action="{{ url_for('balance') }}">
 				<button type="submit">Balance sheet</button>
-				Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
-				Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label><input name="cash" type="checkbox"> Cash basis</label>
 			</form></li>
 			
 			<li><form action="{{ url_for('pandl') }}">
 				<button type="submit">Income statement</button>
-				Begin date: <input name="date_beg" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;">
-				End date: <input name="date_end" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;">
+				<label>Begin date: <input name="date_beg" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label>End date: <input name="date_end" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;"></label>
+				<label><input name="cash" type="checkbox"> Cash basis</label>
 			</form></li>
 		</ul>
 	</body>

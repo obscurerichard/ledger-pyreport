@@ -32,9 +32,10 @@ def index():
 def trial():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	cash = flask.request.args.get('cash', False)
 	
 	# Get trial balance
-	accounts = ledger.trial_balance(date, pstart)
+	accounts = ledger.trial_balance(date, pstart, cash)
 	
 	total_dr = sum(a.balance for a in accounts if a.balance > 0)
 	total_cr = -sum(a.balance for a in accounts if a.balance < 0)
@@ -45,9 +46,10 @@ def trial():
 def balance():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	cash = flask.request.args.get('cash', False)
 	
 	# Get trial balance
-	accounts = ledger.trial_balance(date, pstart)
+	accounts = ledger.trial_balance(date, pstart, cash)
 	accounts_map = ledger.make_account_tree(accounts)
 	
 	# Calculate Profit/Loss
@@ -57,15 +59,16 @@ def balance():
 	accounts.append(ledger.Account(ledger.config['current_year_earnings'], total_pandl))
 	accounts_map = ledger.make_account_tree(accounts)
 	
-	return flask.render_template('balance.html', date=date, assets=accounts_map[ledger.config['assets_account']], liabilities=accounts_map[ledger.config['liabilities_account']], equity=accounts_map[ledger.config['equity_account']])
+	return flask.render_template('balance.html', date=date, cash=cash, assets=accounts_map.get(ledger.config['assets_account'], ledger.Account('Assets')), liabilities=accounts_map.get(ledger.config['liabilities_account'], ledger.Account('Liabilities')), equity=accounts_map.get(ledger.config['equity_account'], ledger.Account('Equity')))
 
 @app.route('/pandl')
 def pandl():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
+	cash = flask.request.args.get('cash', False)
 	
 	# Get P&L
-	accounts = ledger.parse_balance(ledger.run_ledger('--begin', date_beg.strftime('%Y-%m-%d'), '--end', (date_end + timedelta(days=1)).strftime('%Y-%m-%d'), 'balance', '--balance-format', ledger.BALANCE_FORMAT, '--no-total', '--flat', '--cost', ledger.aregex(ledger.config['income_account']), ledger.aregex(ledger.config['expenses_account'])))
+	accounts = ledger.pandl(date_beg, date_end, cash)
 	accounts_map = ledger.make_account_tree(accounts)
 	
 	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
