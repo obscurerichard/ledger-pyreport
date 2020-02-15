@@ -15,7 +15,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import csv
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 import re
 import subprocess
@@ -28,7 +28,9 @@ with open('config.yml', 'r') as f:
 # Helper commands to run Ledger
 
 def run_ledger(*args):
-	proc = subprocess.Popen(['ledger', '--args-only', '--file', config['ledger_file'], '-X', config['report_currency'], '--unround'] + config['ledger_args'] + list(args), encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	ledger_args = ['ledger', '--args-only', '--file', config['ledger_file'], '-X', config['report_currency'], '--date-format', '%Y-%m-%d', '--unround'] + config['ledger_args'] + list(args)
+	#print(' '.join(ledger_args))
+	proc = subprocess.Popen(ledger_args, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	stdout, stderr = proc.communicate()
 	
 	if stderr:
@@ -98,24 +100,64 @@ class Account:
 	@property
 	def is_expense(self):
 		return self.matches(config['expenses_account'])
+	@property
+	def is_cash(self):
+		return any(self.matches(a) for a in config['cash_asset_accounts'])
 	
-	#def get_balance(self, date, is_market=None):
-	#	if is_market is None:
-	#		if self.is_income or self.is_expense:
-	#			basis = '--cost'
-	#		else:
-	#			basis = '--market'
-	#	elif is_market == True:
-	#		basis = '--market'
-	#	else:
-	#		basis = '--cost'
-	#	
-	#	output = run_ledger_date(date, 'balance', '--balance-format', '%(display_total)', '--no-total', '--flat', '--empty', basis, '--limit', 'account=~/^{}$/'.format(re.escape(self.name).replace('/', '\\/')))
-	#	
-	#	return parse_amount(output)
+	def get_transactions(self, date, pstart):
+		transactions = []
+		
+		output = run_ledger_date(date, 'register', '--no-rounding', '--register-format', '%(quoted(format_date(date))),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount))\n', '--limit', 'account=~/^{}$/'.format(re.escape(self.name).replace('/', '\\/')), '--cost' if self.is_income or self.is_expense else '--market', '--related-all', '--no-revalued')
+		
+		output += run_ledger_date(date, 'register', '--no-rounding', '--register-format', '%(quoted(format_date(date))),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount))\n', '--limit', 'account=~/^{}$/'.format(re.escape(self.name).replace('/', '\\/')), '--cost' if self.is_income or self.is_expense else '--market', '--revalued-only')
+		
+		reader = csv.reader(output.splitlines())
+		for row in reader:
+			t_date = datetime.strptime(row[0], '%Y-%m-%d')
+			if t_date < pstart:
+				continue
+			
+			posting = Posting(row[2], parse_amount(row[3]))
+			
+			if posting.account == '<Revalued>':
+				posting.account = self.name
+			
+			if transactions and t_date == transactions[-1].date and row[1] == transactions[-1].payee:
+				# Posting for previous transaction
+				transactions[-1].postings.append(posting)
+			else:
+				# New transaction
+				transactions.append(Transaction(t_date, row[1], [posting]))
+		
+		transactions.sort(key=lambda t: t.date)
+		
+		# Balance transactions
+		for transaction in transactions:
+			t_total = sum(p.amount for p in transaction.postings)
+			if t_total != 0:
+				# Transaction requires balancing, probably due to unrealised gain/revaluation?
+				transaction.postings.append(Posting(config['unrealized_gains'], -t_total))
+		
+		return transactions
+
+class Transaction:
+	def __init__(self, date, payee, postings):
+		self.date = date
+		self.payee = payee
+		self.postings = postings
+
+class Posting:
+	def __init__(self, account, amount):
+		self.account = account
+		self.amount = amount
+		
+		self.balance = None
 
 class Snapshot:
-	def __init__(self):
+	def __init__(self, date):
+		self.date = date
+		self.pstart = None
+		
 		self.accounts = {}
 		self.balances = {}
 	
@@ -170,7 +212,7 @@ def get_accounts():
 
 # Raw Ledger output, unlikely to balance
 def get_raw_snapshot(date, basis=None):
-	snapshot = Snapshot()
+	snapshot = Snapshot(date)
 	
 	# Get balances from Ledger
 	output = (
@@ -206,10 +248,11 @@ def get_snapshot(date):
 # Ledger output, simulating closing of books
 def trial_balance(date, pstart):
 	# Get balances at period start
-	snapshot_pstart = get_snapshot(pstart)
+	snapshot_pstart = get_snapshot(pstart - timedelta(days=1))
 	
 	# Get balances at date
 	snapshot = get_snapshot(date)
+	snapshot.pstart = pstart
 	
 	# Calculate Retained Earnings, and adjust income/expense accounts
 	total_pandl = Decimal(0)

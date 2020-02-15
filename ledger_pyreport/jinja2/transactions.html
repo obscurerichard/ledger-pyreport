@@ -1,0 +1,89 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Account Transactions for {{ account.name }} as at {{ date.strftime('%d %B %Y') }}</title>
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+	</head>
+	<body>
+		<h1>Account Transactions</h1>
+		<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
+		<h2>As at {{ date.strftime('%d %B %Y') }}</h2>
+		
+		<table class="ledger">
+			<tr>
+				<th style="width: 5em;">Date</th>
+				<th>Description</th>
+				<th style="max-width: 8em;">Account</th>
+				<th class="h1" style="text-align: right; width: 5em;">Dr</th>
+				<th class="h1" style="text-align: right; width: 5em;">Cr</th>
+				<th class="h1" style="text-align: right; width: 6em;">Balance</th>
+			</tr>
+			<tr class="total">
+				<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
+				<td>Opening Balance</td>
+				<td></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;">
+					{% if opening_balance >= 0 %}
+						{{ opening_balance|b }} Dr
+					{% else %}
+						{{ -opening_balance|b }} Cr
+					{% endif %}
+				</td>
+			</tr>
+			{% for transaction in transactions %}
+				{% for posting in transaction.postings %}
+					<tr>
+						<td>{% if loop.index0 == 0 %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
+						<td>{% if loop.index0 == 0 %}{{ transaction.payee }}{% endif %}</td>
+						<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account}|urlencode }}">{{ (posting.account|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
+						<td style="text-align: right;">{% if posting.amount > 0 %}{{ posting.amount|b }}{% endif %}</td>
+						<td style="text-align: right;">{% if posting.amount < 0 %}{{ -posting.amount|b }}{% endif %}</td>
+						<td style="text-align: right;">
+							{% if posting.balance >= 0 %}
+								{{ posting.balance|b }} Dr
+							{% else %}
+								{{ -posting.balance|b }} Cr
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+			<tr class="total">
+				<td>{{ date.strftime('%Y-%m-%d') }}</td>
+				<td>Closing Balance</td>
+				<td></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;">
+					{% if closing_balance >= 0 %}
+						{{ closing_balance|b }} Dr
+					{% else %}
+						{{ -closing_balance|b }} Cr
+					{% endif %}
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

@@ -51,7 +51,7 @@ def trial():
 			else:
 				total_cr -= balance
 		
-		return flask.render_template('trial.html', date=date, trial_balance=trial_balance, total_dr=total_dr, total_cr=total_cr)
+		return flask.render_template('trial.html', trial_balance=trial_balance, total_dr=total_dr, total_cr=total_cr)
 	else:
 		# Get multiple trial balances for comparison
 		dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
@@ -65,7 +65,7 @@ def trial():
 			if all(t.get_balance(account.name) == 0 for t in trial_balances):
 				accounts.remove(account)
 		
-		return flask.render_template('trial_multiple.html', dates=dates, trial_balances=trial_balances, accounts=accounts)
+		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=accounts)
 
 @app.route('/balance')
 def balance():
@@ -85,7 +85,7 @@ def balance():
 		if all(b.get_balance(account.name) == 0 and b.get_total(account.name) == 0 for b in balance_sheets):
 			accounts.remove(account)
 	
-	return flask.render_template('balance.html', dates=dates, balance_sheets=balance_sheets, accounts=accounts, config=ledger.config)
+	return flask.render_template('balance.html', balance_sheets=balance_sheets, accounts=accounts, config=ledger.config)
 
 @app.route('/pandl')
 def pandl():
@@ -112,7 +112,32 @@ def pandl():
 	else:
 		period = 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
 	
-	return flask.render_template('pandl.html', period=period, dates_end=dates_end, pandls=pandls, accounts=accounts, config=ledger.config)
+	return flask.render_template('pandl.html', period=period, pandls=pandls, accounts=accounts, config=ledger.config)
+
+@app.route('/transactions')
+def transactions():
+	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
+	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	
+	trial_balance_pstart = ledger.trial_balance(pstart, pstart)
+	account = trial_balance_pstart.get_account(flask.request.args['account'])
+	opening_balance = trial_balance_pstart.get_balance(account.name)
+	
+	balance = opening_balance
+	transactions = account.get_transactions(date, pstart)
+	for transaction in transactions:
+		for posting in transaction.postings[:]:
+			if posting.account == account.name:
+				transaction.postings.remove(posting)
+			else:
+				posting.amount = -posting.amount # In terms of effect on this account
+				balance += posting.amount
+				posting.balance = balance
+	
+	trial_balance = ledger.trial_balance(date, pstart)
+	closing_balance = trial_balance.get_balance(account.name)
+	
+	return flask.render_template('transactions.html', date=date, pstart=pstart, account=account, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance)
 
 @app.template_filter('a')
 def filter_amount(amt):

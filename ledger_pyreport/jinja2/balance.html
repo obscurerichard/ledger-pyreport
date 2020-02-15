@@ -18,10 +18,16 @@
 
 {% macro print_rows(account, invert=False, level=0) %}
 	<tr>
-		<td style="padding-left: calc(2px + {{ level }}em);">{{ account.bits[-1] }}</td>
+		<td style="padding-left: calc(2px + {{ level }}em);">
+			{% if balance_sheets|length == 1 %}
+				<a href="/transactions?{{ {'date': balance_sheets[0].date.strftime('%Y-%m-%d'), 'pstart': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ account.bits[-1] }}</a>
+			{% else %}
+				{{ account.bits[-1] }}
+			{% endif %}
+		</td>
 		{% for balance_sheet in balance_sheets %}
 			{% set amount = balance_sheet.get_balance(account.name) * (-1 if invert else 1) %}
-			<td>{% if amount != 0 %}{{ amount|a }}{% endif %}</td>
+			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
 		{% endfor %}
 	</tr>
 	
@@ -36,9 +42,9 @@
 		<tr>
 			{% if isfirst and year_headers %}
 				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
-				{% for date in dates %}<th class="h2">{{ date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+				{% for balance_sheet in balance_sheets %}<th class="h2">{{ balance_sheet.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
 			{% else %}
-				<th class="h2" colspan="{{ dates|length + 1 }}">{{ account_class.bits[-1] }} {{ label }}</th>
+				<th class="h2" colspan="{{ balance_sheets|length + 1 }}">{{ account_class.bits[-1] }} {{ label }}</th>
 			{% endif %}
 		</tr>
 		
@@ -63,27 +69,27 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Balance Sheet as at {{ dates[0].strftime('%d %B %Y') }}</title>
+		<title>Balance Sheet as at {{ balance_sheets[0].date.strftime('%d %B %Y') }}</title>
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 	</head>
 	<body>
 		<h1>Balance Sheet</h1>
-		<h2>As at {{ dates[0].strftime('%d %B %Y') }}</h2>
+		<h2>As at {{ balance_sheets[0].date.strftime('%d %B %Y') }}</h2>
 		
-		<table class="ledger">
+		<table class="ledger onedesc">
 			{# Assets #}
-			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Assets</th></tr>
+			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Assets</th></tr>
 			{{ do_accounts(config['assets_account'], 'Assets', False, True) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			{# Liabilities #}
-			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Liabilities</th></tr>
+			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Liabilities</th></tr>
 			{{ do_accounts(config['liabilities_account'], 'Liabilities', True, False) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			{# Equity #}
-			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Equity</th></tr>
+			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Equity</th></tr>
 			
 			{% for account in balance_sheets[0].get_account(config['equity_account']).children if account in accounts %}
 				{{ print_rows(account, invert=True) }}

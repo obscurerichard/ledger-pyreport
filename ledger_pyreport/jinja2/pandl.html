@@ -18,10 +18,16 @@
 
 {% macro print_rows(account, invert=False, level=0) %}
 	<tr>
-		<td style="padding-left: calc(2px + {{ level }}em);">{{ account.bits[-1] }}</td>
+		<td style="padding-left: calc(2px + {{ level }}em);">
+			{% if pandls|length == 1 %}
+				<a href="/transactions?{{ {'date': pandls[0].date.strftime('%Y-%m-%d'), 'pstart': pandls[0].pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ account.bits[-1] }}</a>
+			{% else %}
+				{{ account.bits[-1] }}
+			{% endif %}
+		</td>
 		{% for pandl in pandls %}
 			{% set amount = pandl.get_balance(account.name) * (-1 if invert else 1) %}
-			<td>{% if amount != 0 %}{{ amount|a }}{% endif %}</td>
+			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
 		{% endfor %}
 	</tr>
 	
@@ -34,10 +40,10 @@
 	<tr>
 		{% if year_headers %}
 			{# CSS hackery to centre-align the heading #}
-			<th class="h1" style="padding-left: calc(2px + {{ dates_end|length * 6 }}em);">{{ label }}</th>
-			{% for date in dates_end %}<th class="h2">{{ date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			<th class="h1" style="padding-left: calc(2px + {{ pandls|length * 6 }}em);">{{ label }}</th>
+			{% for pandl in pandls %}<th class="h2">{{ pandl.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
 		{% else %}
-			<th class="h1" colspan="{{ dates_end|length + 1 }}">{{ label }}</th>
+			<th class="h1" colspan="{{ pandls|length + 1 }}">{{ label }}</th>
 		{% endif %}
 	</tr>
 	
@@ -63,7 +69,7 @@
 		<h1>Income Statement</h1>
 		<h2>For the {{ period }}</h2>
 		
-		<table class="ledger">
+		<table class="ledger onedesc">
 			{{ do_accounts(config['income_account'], 'Income', True, True) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			

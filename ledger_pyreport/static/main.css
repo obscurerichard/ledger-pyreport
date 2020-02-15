@@ -57,9 +57,19 @@ table.ledger tr.total td {
 	border-bottom: 1pt solid black;
 }
 
-table.ledger tr td:not(:first-child), table.ledger tr th:not(:first-child) {
+table.ledger.onedesc tr td:not(:first-child), table.ledger.onedesc tr th:not(:first-child) {
 	text-align: right;
 	width: 6em;
+}
+
+table.ledger a {
+	color: black;
+	text-decoration: none;
+}
+
+table.ledger a:hover {
+	color: blue;
+	text-decoration: underline;
 }
 
 @media screen {
