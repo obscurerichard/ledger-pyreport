@@ -16,81 +16,82 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% macro do_account(account, acc_level=0, disp_level=0, invert=False) %}
+{% macro print_rows(account, invert=False, level=0) %}
 	<tr>
-		<td style="padding-left: calc(2px + {{ disp_level }}em);">{{ ':'.join(account.name_parts[acc_level+1:]) }}</td>
-		<td>{% if account.balance != 0 %}{{ (account.balance * (-1 if invert else 1))|a }}{% endif %}</td>
+		<td style="padding-left: calc(2px + {{ level }}em);">{{ account.bits[-1] }}</td>
+		{% for balance_sheet in balance_sheets %}
+			{% set amount = balance_sheet.get_balance(account.name) * (-1 if invert else 1) %}
+			<td>{% if amount != 0 %}{{ amount|a }}{% endif %}</td>
+		{% endfor %}
 	</tr>
-	{{ walk_children(account.children, acc_level + 1, disp_level + 1, invert) }}
+	
+	{% for child in account.children if child in accounts %}
+		{{ print_rows(child, invert, level + 1) }}
+	{% endfor %}
 {% endmacro %}
 
-{% macro walk_children(children, acc_level=0, disp_level=0, invert=False) %}
-	{% for account in children %}
-		{{ do_account(account, acc_level, disp_level, invert) }}
+{% macro do_accounts(root, label, invert, year_headers) %}
+	{% for account_class in balance_sheets[0].get_account(root).children if account_class in accounts %}
+		{% set isfirst = (loop.index0 == 0) %}
+		<tr>
+			{% if isfirst and year_headers %}
+				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
+				{% for date in dates %}<th class="h2">{{ date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			{% else %}
+				<th class="h2" colspan="{{ dates|length + 1 }}">{{ account_class.bits[-1] }} {{ label }}</th>
+			{% endif %}
+		</tr>
+		
+		{% for account in account_class.children if account in accounts %}
+			{{ print_rows(account, invert=invert) }}
+		{% endfor %}
+		
+		<tr class="total">
+			<td>Total {{ account_class.bits[-1] }} {{ label }}</td>
+			{% for balance_sheet in balance_sheets %}<td>{{ (balance_sheet.get_total(account_class.name) * (-1 if invert else 1))|a }}</td>{% endfor %}
+		</tr>
+		<tr><td colspan="2">&nbsp;</td></tr>
 	{% endfor %}
+	
+	<tr class="total">
+		<td>Total {{ label }}</td>
+		{% for balance_sheet in balance_sheets %}<td>{{ (balance_sheet.get_total(root) * (-1 if invert else 1))|a }}</td>{% endfor %}
+	</tr>
 {% endmacro %}
 
 <!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Balance Sheet as at {{ date.strftime('%d %B %Y') }}</title>
+		<title>Balance Sheet as at {{ dates[0].strftime('%d %B %Y') }}</title>
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 	</head>
 	<body>
 		<h1>Balance Sheet</h1>
-		<h2>As at {{ date.strftime('%d %B %Y') }}</h2>
+		<h2>As at {{ dates[0].strftime('%d %B %Y') }}</h2>
 		
-		<table class="ledger two-amounts">
-			<tr><th class="h1" colspan="2">Assets</th></tr>
+		<table class="ledger">
+			{# Assets #}
+			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Assets</th></tr>
+			{{ do_accounts(config['assets_account'], 'Assets', False, True) }}
+			<tr><td colspan="2">&nbsp;</td></tr>
 			
-			{% for asset_class in assets.children %}
-				<tr><th class="h2" colspan="2">{{ asset_class.name_parts[-1] }} Assets</th></tr>
-				{{ walk_children(asset_class.children, acc_level=1) }}
-				<tr class="total">
-					<td>Total {{ asset_class.name_parts[-1] }} Assets</td>
-					<td>{{ asset_class.total()|a }}</td>
-				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
+			{# Liabilities #}
+			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Liabilities</th></tr>
+			{{ do_accounts(config['liabilities_account'], 'Liabilities', True, False) }}
+			<tr><td colspan="2">&nbsp;</td></tr>
+			
+			{# Equity #}
+			<tr><th class="h1" colspan="{{ dates|length + 1 }}">Equity</th></tr>
+			
+			{% for account in balance_sheets[0].get_account(config['equity_account']).children if account in accounts %}
+				{{ print_rows(account, invert=True) }}
 			{% endfor %}
 			
 			<tr class="total">
-				<td>Total Assets</td>
-				<td>{{ assets.total()|a }}</td>
-			</tr>
-			<tr><td colspan="2">&nbsp;</td></tr>
-			
-			{% if not cash %}
-				<tr><th class="h1" colspan="2">Liabilities</th></tr>
-				
-				{% for liability_class in liabilities.children %}
-					<tr><th class="h2" colspan="2">{{ liability_class.name_parts[-1] }} Liabilities</th></tr>
-					{{ walk_children(liability_class.children, acc_level=1, invert=True) }}
-					<tr class="total">
-						<td>Total {{ liability_class.name_parts[-1] }} Liabilities</td>
-						<td>{{ -liability_class.total()|a }}</td>
-					</tr>
-					<tr><td colspan="2">&nbsp;</td></tr>
-				{% endfor %}
-				
-				<tr class="total">
-					<td>Total Liabilities</td>
-					<td>{{ -liabilities.total()|a }}</td>
-				</tr>
-				<tr class="total">
-					<td>Net Assets</td>
-					<td>{{ (assets.total() + liabilities.total())|a }}</td>
-				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
-			{% endif %}
-			
-			<tr><th class="h1" colspan="2">Equity</th></tr>
-			
-			{{ walk_children(equity.children, invert=True) }}
-			<tr class="total">
 				<td>Total Equity</td>
-				<td>{{ -equity.total()|a }}</td>
+				{% for balance_sheet in balance_sheets %}<td>{{ -balance_sheet.get_total(config['equity_account'])|a }}</td>{% endfor %}
 			</tr>
 		</table>
 	</body>

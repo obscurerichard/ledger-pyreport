@@ -57,8 +57,9 @@ table.ledger tr.total td {
 	border-bottom: 1pt solid black;
 }
 
-table.two-amounts tr td:nth-child(2), table.two-amounts tr td:nth-child(3) {
+table.ledger tr td:not(:first-child), table.ledger tr th:not(:first-child) {
 	text-align: right;
+	width: 6em;
 }
 
 @media screen {

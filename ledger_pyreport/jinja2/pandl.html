@@ -16,18 +16,39 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% macro do_account(account, acc_level=0, disp_level=0, invert=False) %}
+{% macro print_rows(account, invert=False, level=0) %}
 	<tr>
-		<td style="padding-left: calc(2px + {{ disp_level }}em);">{{ ':'.join(account.name_parts[acc_level+1:]) }}</td>
-		<td>{% if account.balance != 0 %}{{ (account.balance * (-1 if invert else 1))|a }}{% endif %}</td>
+		<td style="padding-left: calc(2px + {{ level }}em);">{{ account.bits[-1] }}</td>
+		{% for pandl in pandls %}
+			{% set amount = pandl.get_balance(account.name) * (-1 if invert else 1) %}
+			<td>{% if amount != 0 %}{{ amount|a }}{% endif %}</td>
+		{% endfor %}
 	</tr>
-	{{ walk_children(account.children, acc_level + 1, disp_level + 1, invert) }}
+	
+	{% for child in account.children if child in accounts %}
+		{{ print_rows(child, invert, level + 1) }}
+	{% endfor %}
 {% endmacro %}
 
-{% macro walk_children(children, acc_level=0, disp_level=0, invert=False) %}
-	{% for account in children %}
-		{{ do_account(account, acc_level, disp_level, invert) }}
+{% macro do_accounts(root, label, invert, year_headers) %}
+	<tr>
+		{% if year_headers %}
+			{# CSS hackery to centre-align the heading #}
+			<th class="h1" style="padding-left: calc(2px + {{ dates_end|length * 6 }}em);">{{ label }}</th>
+			{% for date in dates_end %}<th class="h2">{{ date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+		{% else %}
+			<th class="h1" colspan="{{ dates_end|length + 1 }}">{{ label }}</th>
+		{% endif %}
+	</tr>
+	
+	{% for account in pandls[0].get_account(root).children if account in accounts %}
+		{{ print_rows(account, invert=invert) }}
 	{% endfor %}
+	
+	<tr class="total">
+		<td>Total {{ label }}</td>
+		{% for pandl in pandls %}<td>{{ (pandl.get_total(root) * (-1 if invert else 1))|a }}</td>{% endfor %}
+	</tr>
 {% endmacro %}
 
 <!DOCTYPE html>
@@ -42,26 +63,16 @@
 		<h1>Income Statement</h1>
 		<h2>For the {{ period }}</h2>
 		
-		<table class="ledger two-amounts">
-			<tr><th class="h1" colspan="2">Income</th></tr>
-			{{ walk_children(income.children, invert=True) }}
-			<tr class="total">
-				<td>Total Income</td>
-				<td>{{ -income.total()|a }}</td>
-			</tr>
+		<table class="ledger">
+			{{ do_accounts(config['income_account'], 'Income', True, True) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
-			<tr><th class="h1" colspan="2">Expenses</th></tr>
-			{{ walk_children(expenses.children) }}
-			<tr class="total">
-				<td>Total Expenses</td>
-				<td>{{ expenses.total()|a }}</td>
-			</tr>
+			{{ do_accounts(config['expenses_account'], 'Expenses', False, False) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			<tr class="total">
 				<td>Net Surplus (Loss)</td>
-				<td>{{ -(income.total() + expenses.total())|a }}</td>
+				{% for pandl in pandls %}<td>{{ -(pandl.get_total(config['income_account']) + pandl.get_total(config['expenses_account']))|a }}</td>{% endfor %}
 			</tr>
 		</table>
 	</body>

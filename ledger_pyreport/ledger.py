@@ -17,6 +17,7 @@
 import csv
 from datetime import timedelta
 from decimal import Decimal
+import re
 import subprocess
 import yaml
 
@@ -24,26 +25,7 @@ import yaml
 with open('config.yml', 'r') as f:
 	config = yaml.safe_load(f)
 
-class Account:
-	def __init__(self, name, balance=None):
-		if balance is None:
-			balance = Decimal(0)
-		
-		self.name = name
-		self.balance = balance
-		
-		self.parent = None
-		self.children = []
-	
-	@property
-	def name_parts(self):
-		return self.name.split(':')
-	
-	def total(self):
-		result = self.balance
-		for child in self.children:
-			result += child.total()
-		return result
+# Helper commands to run Ledger
 
 def run_ledger(*args):
 	proc = subprocess.Popen(['ledger', '--args-only', '--file', config['ledger_file'], '-X', config['report_currency'], '--unround'] + config['ledger_args'] + list(args), encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -57,48 +39,7 @@ def run_ledger(*args):
 def run_ledger_date(date, *args):
 	return run_ledger('--end', (date + timedelta(days=1)).strftime('%Y-%m-%d'), *args)
 
-BALANCE_FORMAT = '%(quoted(display_total)),%(quoted(account))\n'
-
-def parse_balance(output):
-	reader = csv.reader(output.splitlines())
-	
-	accounts = []
-	
-	# Parse balance lines
-	for row in reader:
-		balance = row[0]
-		if balance.startswith(config['report_currency']):
-			balance = balance[1:]
-		accounts.append(Account(row[1], Decimal(balance)))
-	
-	return accounts
-
-def make_account_tree(accounts):
-	accounts_map = {}
-	
-	for account in accounts:
-		accounts_map[account.name] = account
-		
-		for i in range(1, len(account.name_parts)):
-			parent_name = ':'.join(account.name_parts[:i])
-			if parent_name not in accounts_map:
-				accounts_map[parent_name] = Account(parent_name, Decimal(0))
-	
-	for account in accounts_map.values():
-		if len(account.name_parts) > 1:
-			account.parent = accounts_map[':'.join(account.name_parts[:-1])]
-			account.parent.children.append(account)
-	
-	return accounts_map
-
-# Return a regex for an account and its children
-def aregex(account):
-	return '^{0}:|^{0}$'.format(account)
-
-def amatch(needle, haystack):
-	if haystack == needle or haystack.startswith(needle + ':'):
-		return True
-	return False
+# General financial logic
 
 def financial_year(date):
 	pstart = date.replace(day=1, month=7)
@@ -106,77 +47,182 @@ def financial_year(date):
 		pstart = pstart.replace(year=pstart.year - 1)
 	return pstart
 
-# Calculate Unrealized Gains
-def unrealized_gains(date):
-	accounts_cost = parse_balance(run_ledger_date(date, 'balance', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--cost', aregex(config['assets_account']), aregex(config['liabilities_account'])))
-	accounts_current = parse_balance(run_ledger_date(date, 'balance', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--market', aregex(config['assets_account']), aregex(config['liabilities_account'])))
-	total_cost = sum(a.balance for a in accounts_cost)
-	total_current = sum(a.balance for a in accounts_current)
-	unrealized_gains = total_current - total_cost
-	
-	return unrealized_gains
+# Ledger logic
 
-# Get account balances at date
-def get_accounts(date, cash=False):
-	# Calculate Unrealized Gains
-	unrealized_gains_amt = unrealized_gains(date)
-	
-	# Get account balances
-	accounts = parse_balance(run_ledger_date(date, 'balance', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--cost', aregex(config['income_account']), aregex(config['expenses_account'])))
-	accounts += parse_balance(run_ledger_date(date, 'balance', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--market', aregex(config['assets_account']), aregex(config['liabilities_account']), aregex(config['equity_account'])))
-	
-	# Add Unrealized Gains
-	accounts.append(Account(config['unrealized_gains'], -unrealized_gains_amt))
-	accounts.sort(key=lambda a: a.name)
-	
-	# Convert to cash basis
-	if cash:
-		accounts_map = make_account_tree(accounts)
+class Account:
+	def __init__(self, name):
+		if not isinstance(name, str):
+			raise Exception('Account name must be a string')
 		
-		for account in accounts[:]:
-			if amatch(config['liabilities_account'], account.name) or (amatch(config['assets_account'], account.name) and not any(amatch(x, account.name) for x in config['cash_asset_accounts'])):
-				drcr = parse_balance(run_ledger_date(date, 'balance', '--related', '--balance-format', BALANCE_FORMAT, '--no-total', '--flat', '--cost' if amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name) else '--market', aregex(account.name)))
-				
-				for drcr_account in drcr:
-					accounts_map[drcr_account.name].balance -= drcr_account.balance
-				
-				accounts.remove(account)
-				del accounts_map[account.name]
+		self.name = name
+		
+		self.parent = None
+		self.children = []
+	
+	def __repr__(self):
+		return '<Account "{}">'.format(self.name)
+	
+	@property
+	def bits(self):
+		return self.name.split(':')
+	
+	def matches(self, needle):
+		if self.name == needle or self.name.startswith(needle + ':'):
+			return True
+		return False
+	
+	def insert_into_tree(self, accounts):
+		if ':' in self.name:
+			parent_name = self.name[:self.name.rindex(':')]
+			if parent_name not in accounts:
+				parent = Account(parent_name)
+				accounts[parent_name] = parent
+				parent.insert_into_tree(accounts)
+			
+			self.parent = accounts[parent_name]
+			if self not in self.parent.children:
+				self.parent.children.append(self)
+	
+	@property
+	def is_asset(self):
+		return self.matches(config['assets_account'])
+	@property
+	def is_liability(self):
+		return self.matches(config['liabilities_account'])
+	@property
+	def is_equity(self):
+		return self.matches(config['equity_account'])
+	@property
+	def is_income(self):
+		return self.matches(config['income_account'])
+	@property
+	def is_expense(self):
+		return self.matches(config['expenses_account'])
+	
+	#def get_balance(self, date, is_market=None):
+	#	if is_market is None:
+	#		if self.is_income or self.is_expense:
+	#			basis = '--cost'
+	#		else:
+	#			basis = '--market'
+	#	elif is_market == True:
+	#		basis = '--market'
+	#	else:
+	#		basis = '--cost'
+	#	
+	#	output = run_ledger_date(date, 'balance', '--balance-format', '%(display_total)', '--no-total', '--flat', '--empty', basis, '--limit', 'account=~/^{}$/'.format(re.escape(self.name).replace('/', '\\/')))
+	#	
+	#	return parse_amount(output)
+
+class Snapshot:
+	def __init__(self):
+		self.accounts = {}
+		self.balances = {}
+	
+	def get_account(self, account_name):
+		if account_name not in self.accounts:
+			account = Account(account_name)
+			self.accounts[account_name] = account
+			account.insert_into_tree(self.accounts)
+		
+		return self.accounts[account_name]
+	
+	def set_balance(self, account_name, balance):
+		if account_name not in self.accounts:
+			account = Account(account_name)
+			self.accounts[account_name] = account
+			account.insert_into_tree(self.accounts)
+		
+		if account_name not in self.balances:
+			self.balances[account_name] = Decimal(0)
+		
+		self.balances[account_name] = balance
+	
+	def get_balance(self, account_name):
+		if account_name not in self.accounts:
+			self.set_balance(account_name, Decimal(0))
+		
+		if account_name not in self.balances:
+			self.balances[account_name] = Decimal(0)
+		
+		return self.balances[account_name]
+	
+	def get_total(self, account_name):
+		return self.get_balance(account_name) + sum(self.get_total(c.name) for c in self.accounts[account_name].children)
+
+def parse_amount(amount):
+	if amount == '' or amount == '0':
+		return Decimal(0)
+	if not amount.startswith(config['report_currency']):
+		raise Exception('Unexpected currency returned by ledger: {}'.format(amount))
+	return Decimal(amount[len(config['report_currency']):])
+
+def get_accounts():
+	output = run_ledger('balance', '--balance-format', '%(account)\n', '--no-total', '--flat', '--empty')
+	account_names = output.rstrip('\n').split('\n')
+	
+	accounts = {n: Account(n) for n in account_names}
+	
+	for account in list(accounts.values()):
+		account.insert_into_tree(accounts)
 	
 	return accounts
 
-# Calculate trial balance
-def trial_balance(date, pstart, cash=False):
+# Raw Ledger output, unlikely to balance
+def get_raw_snapshot(date, basis=None):
+	snapshot = Snapshot()
+	
+	# Get balances from Ledger
+	output = (
+		run_ledger_date(date, 'balance', '--balance-format', '%(quoted(account)),%(quoted(display_total))\n', '--no-total', '--flat', '--empty', basis if basis is not None else '--market', config['assets_account'], config['liabilities_account'], config['equity_account']) +
+		run_ledger_date(date, 'balance', '--balance-format', '%(quoted(account)),%(quoted(display_total))\n', '--no-total', '--flat', '--empty', basis if basis is not None else '--cost', config['income_account'], config['expenses_account'])
+	)
+	reader = csv.reader(output.splitlines())
+	for row in reader:
+		snapshot.set_balance(row[0], parse_amount(row[1]))
+	
+	return snapshot
+
+# Ledger output, adjusted for Unrealized Gains
+def get_snapshot(date):
+	snapshot_cost = get_raw_snapshot(date, '--cost')
+	snapshot = get_raw_snapshot(date)
+	
+	market_total = Decimal(0)
+	cost_total = Decimal(0)
+	
+	# Calculate unrealized gains
+	for account in snapshot.accounts.values():
+		if account.is_asset or account.is_liability:
+			market_total += snapshot.get_balance(account.name)
+			cost_total += snapshot_cost.get_balance(account.name)
+	
+	# Add Unrealized Gains account
+	unrealized_gains_amt = market_total - cost_total
+	snapshot.set_balance(config['unrealized_gains'], snapshot.get_balance(config['unrealized_gains']) - unrealized_gains_amt)
+	
+	return snapshot
+
+# Ledger output, simulating closing of books
+def trial_balance(date, pstart):
 	# Get balances at period start
-	accounts_pstart = get_accounts(pstart - timedelta(days=1), cash)
-	accounts_map_pstart = make_account_tree(accounts_pstart)
+	snapshot_pstart = get_snapshot(pstart)
 	
 	# Get balances at date
-	accounts = get_accounts(date, cash)
+	snapshot = get_snapshot(date)
 	
-	# Adjust Retained Earnings
+	# Calculate Retained Earnings, and adjust income/expense accounts
 	total_pandl = Decimal(0)
-	if config['income_account'] in accounts_map_pstart:
-		total_pandl = accounts_map_pstart[config['income_account']].total()
-	if config['expenses_account'] in accounts_map_pstart:
-		total_pandl += accounts_map_pstart[config['expenses_account']].total()
+	for account in snapshot_pstart.accounts.values():
+		if account.is_income or account.is_expense:
+			total_pandl += snapshot_pstart.get_balance(account.name)
 	
-	next(a for a in accounts if a.name == config['retained_earnings']).balance += total_pandl
+	# Add Retained Earnings account
+	snapshot.set_balance(config['retained_earnings'], snapshot.get_balance(config['retained_earnings']) + total_pandl)
 	
 	# Adjust income/expense accounts
-	for account in accounts:
-		if amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name):
-			if account.name in accounts_map_pstart:
-				account.balance -= accounts_map_pstart[account.name].balance
+	for account in snapshot.accounts.values():
+		if account.is_income or account.is_expense:
+			snapshot.set_balance(account.name, snapshot.get_balance(account.name) - snapshot_pstart.get_balance(account.name))
 	
-	return accounts
-
-# Calculate profit and loss
-def pandl(date_beg, date_end, cash=False):
-	accounts = trial_balance(date_end, date_beg, cash)
-	
-	for account in accounts[:]:
-		if not (amatch(config['income_account'], account.name) or amatch(config['expenses_account'], account.name)):
-			accounts.remove(account)
-	
-	return accounts
+	return snapshot
