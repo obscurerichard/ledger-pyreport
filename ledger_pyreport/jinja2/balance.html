@@ -26,7 +26,7 @@
 			{% endif %}
 		</td>
 		{% for balance_sheet in balance_sheets %}
-			{% set amount = balance_sheet.get_balance(account.name) * (-1 if invert else 1) %}
+			{% set amount = (-balance_sheet.get_balance(account) if invert else balance_sheet.get_balance(account)).exchange(report_currency, True) %}
 			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
 		{% endfor %}
 	</tr>
@@ -37,7 +37,7 @@
 {% endmacro %}
 
 {% macro do_accounts(root, label, invert, year_headers) %}
-	{% for account_class in balance_sheets[0].get_account(root).children if account_class in accounts %}
+	{% for account_class in root.children if account_class in accounts %}
 		<tr>
 			{% if loop.first and year_headers %}
 				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
@@ -53,14 +53,14 @@
 		
 		<tr class="total">
 			<td>Total {{ account_class.bits[-1] }} {{ label }}</td>
-			{% for balance_sheet in balance_sheets %}<td>{{ (balance_sheet.get_total(account_class.name) * (-1 if invert else 1))|a }}</td>{% endfor %}
+			{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(account_class) if invert else balance_sheet.get_total(account_class)).exchange(report_currency, True)|a }}</td>{% endfor %}
 		</tr>
 		<tr><td colspan="2">&nbsp;</td></tr>
 	{% endfor %}
 	
 	<tr class="total">
 		<td>Total {{ label }}</td>
-		{% for balance_sheet in balance_sheets %}<td>{{ (balance_sheet.get_total(root) * (-1 if invert else 1))|a }}</td>{% endfor %}
+		{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(root) if invert else balance_sheet.get_total(root)).exchange(report_currency, True)|a }}</td>{% endfor %}
 	</tr>
 {% endmacro %}
 
@@ -79,24 +79,24 @@
 		<table class="ledger onedesc">
 			{# Assets #}
 			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Assets</th></tr>
-			{{ do_accounts(config['assets_account'], 'Assets', False, True) }}
+			{{ do_accounts(ledger.get_account(config['assets_account']), 'Assets', False, True) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			{# Liabilities #}
 			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Liabilities</th></tr>
-			{{ do_accounts(config['liabilities_account'], 'Liabilities', True, False) }}
+			{{ do_accounts(ledger.get_account(config['liabilities_account']), 'Liabilities', True, False) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			{# Equity #}
 			<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Equity</th></tr>
 			
-			{% for account in balance_sheets[0].get_account(config['equity_account']).children if account in accounts %}
+			{% for account in ledger.get_account(config['equity_account']).children if account in accounts %}
 				{{ print_rows(account, invert=True) }}
 			{% endfor %}
 			
 			<tr class="total">
 				<td>Total Equity</td>
-				{% for balance_sheet in balance_sheets %}<td>{{ -balance_sheet.get_total(config['equity_account'])|a }}</td>{% endfor %}
+				{% for balance_sheet in balance_sheets %}<td>{{ -balance_sheet.get_total(ledger.get_account(config['equity_account'])).exchange(report_currency, True)|a }}</td>{% endfor %}
 			</tr>
 		</table>
 	</body>

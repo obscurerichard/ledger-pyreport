@@ -26,7 +26,7 @@
 			{% endif %}
 		</td>
 		{% for pandl in pandls %}
-			{% set amount = pandl.get_balance(account.name) * (-1 if invert else 1) %}
+			{% set amount = (-pandl.get_balance(account) if invert else pandl.get_balance(account)).exchange(report_currency, True) %}
 			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
 		{% endfor %}
 	</tr>
@@ -47,13 +47,13 @@
 		{% endif %}
 	</tr>
 	
-	{% for account in pandls[0].get_account(root).children if account in accounts %}
+	{% for account in root.children if account in accounts %}
 		{{ print_rows(account, invert=invert) }}
 	{% endfor %}
 	
 	<tr class="total">
 		<td>Total {{ label }}</td>
-		{% for pandl in pandls %}<td>{{ (pandl.get_total(root) * (-1 if invert else 1))|a }}</td>{% endfor %}
+		{% for pandl in pandls %}<td>{{ (-pandl.get_total(root) if invert else pandl.get_total(root)).exchange(report_currency, True)|a }}</td>{% endfor %}
 	</tr>
 {% endmacro %}
 
@@ -70,15 +70,15 @@
 		<h2>For the {{ period }}</h2>
 		
 		<table class="ledger onedesc">
-			{{ do_accounts(config['income_account'], 'Income', True, True) }}
+			{{ do_accounts(ledger.get_account(config['income_account']), 'Income', True, True) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
-			{{ do_accounts(config['expenses_account'], 'Expenses', False, False) }}
+			{{ do_accounts(ledger.get_account(config['expenses_account']), 'Expenses', False, False) }}
 			<tr><td colspan="2">&nbsp;</td></tr>
 			
 			<tr class="total">
 				<td>Net Surplus (Loss)</td>
-				{% for pandl in pandls %}<td>{{ -(pandl.get_total(config['income_account']) + pandl.get_total(config['expenses_account']))|a }}</td>{% endfor %}
+				{% for pandl in pandls %}<td>{{ -(pandl.get_total(ledger.get_account(config['income_account'])) + pandl.get_total(ledger.get_account(config['expenses_account']))).exchange(report_currency, True)|a }}</td>{% endfor %}
 			</tr>
 		</table>
 	</body>

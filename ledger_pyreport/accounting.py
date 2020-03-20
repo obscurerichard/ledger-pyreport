@@ -19,6 +19,21 @@ from decimal import Decimal
 
 from .model import *
 
+def trial_balance(ledger, date, pstart):
+	tb = TrialBalance(ledger, date, pstart)
+	
+	for transaction in ledger.transactions:
+		if transaction.date > date:
+			continue
+		
+		for posting in transaction.postings:
+			if (posting.account.is_income or posting.account.is_expense) and transaction.date < pstart:
+				tb.balances[config['retained_earnings']] = tb.get_balance(ledger.get_account(config['retained_earnings'])) + posting.amount
+			else:
+				tb.balances[posting.account.name] = tb.get_balance(posting.account) + posting.amount
+	
+	return tb
+
 def add_unrealized_gains(tb, currency):
 	for account in list(tb.ledger.accounts.values()):
 		if not account.is_market:
@@ -36,17 +51,11 @@ def add_unrealized_gains(tb, currency):
 	
 	return trial_balance(tb.ledger, tb.date, tb.pstart)
 
-def trial_balance(ledger, date, pstart):
-	tb = TrialBalance(ledger, date, pstart)
+def balance_sheet(tb):
+	# Calculate Profit/Loss
+	total_pandl = tb.get_total(tb.ledger.get_account(config['income_account'])) + tb.get_total(tb.ledger.get_account(config['expenses_account']))
 	
-	for transaction in ledger.transactions:
-		if transaction.date > date:
-			continue
-		
-		for posting in transaction.postings:
-			if (posting.account.is_income or posting.account.is_expense) and transaction.date < pstart:
-				tb.balances[config['retained_earnings']] = tb.get_balance(ledger.get_account(config['retained_earnings'])) + posting.amount
-			else:
-				tb.balances[posting.account.name] = tb.get_balance(posting.account) + posting.amount
+	# Add Current Year Earnings account
+	tb.balances[config['current_year_earnings']] = tb.get_balance(tb.ledger.get_account(config['current_year_earnings'])) + total_pandl
 	
 	return tb

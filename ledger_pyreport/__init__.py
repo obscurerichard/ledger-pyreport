@@ -69,17 +69,15 @@ def trial():
 		trial_balances = [accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency) for d, p in zip(dates, pstarts)]
 		
 		# Delete accounts with always zero balances
-		accounts = list(trial_balances[0].ledger.accounts.values())
+		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
 		for account in accounts[:]:
 			if all(t.get_balance(account) == 0 for t in trial_balances):
 				accounts.remove(account)
 		
-		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=sorted(accounts, key=lambda a: a.name), report_currency=report_currency)
+		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=accounts, report_currency=report_currency)
 
 @app.route('/balance')
 def balance():
-	raise Exception('NYI')
-	
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	compare = int(flask.request.args['compare'])
@@ -88,20 +86,20 @@ def balance():
 	dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
 	pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
 	
-	balance_sheets = [accounting.balance_sheet(d, p) for d, p in zip(dates, pstarts)]
+	report_currency = Currency(*config['report_currency'])
+	l = ledger.raw_transactions_at_date(date)
+	balance_sheets = [accounting.balance_sheet(accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency)) for d, p in zip(dates, pstarts)]
 	
 	# Delete accounts with always zero balances
-	accounts = list(balance_sheets[0].accounts.values())
+	accounts = sorted(l.accounts.values(), key=lambda a: a.name)
 	for account in accounts[:]:
-		if all(b.get_balance(account.name) == 0 and b.get_total(account.name) == 0 for b in balance_sheets):
+		if all(b.get_balance(account) == 0 and b.get_total(account) == 0 for b in balance_sheets):
 			accounts.remove(account)
 	
-	return flask.render_template('balance.html', balance_sheets=balance_sheets, accounts=accounts, config=ledger.config)
+	return flask.render_template('balance.html', ledger=l, balance_sheets=balance_sheets, accounts=accounts, config=config, report_currency=report_currency)
 
 @app.route('/pandl')
 def pandl():
-	raise Exception('NYI')
-	
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	compare = int(flask.request.args['compare'])
@@ -110,12 +108,14 @@ def pandl():
 	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
 	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
 	
-	pandls = [ledger.trial_balance(de, db) for de, db in zip(dates_end, dates_beg)]
+	report_currency = Currency(*config['report_currency'])
+	l = ledger.raw_transactions_at_date(date_end)
+	pandls = [accounting.trial_balance(l, de, db) for de, db in zip(dates_end, dates_beg)]
 	
 	# Delete accounts with always zero balances
-	accounts = list(pandls[0].accounts.values())
+	accounts = sorted(l.accounts.values(), key=lambda a: a.name)
 	for account in accounts[:]:
-		if all(p.get_balance(account.name) == 0 and p.get_total(account.name) == 0 for p in pandls):
+		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in pandls):
 			accounts.remove(account)
 	
 	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
@@ -125,7 +125,7 @@ def pandl():
 	else:
 		period = 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
 	
-	return flask.render_template('pandl.html', period=period, pandls=pandls, accounts=accounts, config=ledger.config)
+	return flask.render_template('pandl.html', period=period, ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency)
 
 @app.route('/transactions')
 def transactions():

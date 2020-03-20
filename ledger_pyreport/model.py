@@ -245,7 +245,7 @@ class Balance:
 		elif isinstance(other, Amount):
 			raise Exception('NYI')
 		elif other == 0:
-			return len(self.amounts) == 0
+			return all(a == 0 for a in self.amounts)
 		else:
 			raise TypeError('Cannot compare Balance with non-zero number')
 	
@@ -265,6 +265,8 @@ class Balance:
 				new_amount = Amount(0, other.currency)
 				new_amounts.append(new_amount)
 			new_amount.amount += other.amount
+		elif other == 0:
+			pass
 		else:
 			raise Exception('NYI')
 		
@@ -296,4 +298,4 @@ class TrialBalance:
 		return self.balances.get(account.name, Balance())
 	
 	def get_total(self, account):
-		return self.get_balance(account) + sum(self.get_total(a) for a in account.children)
+		return self.get_balance(account) + sum((self.get_total(a) for a in account.children), Balance())
