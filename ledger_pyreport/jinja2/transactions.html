@@ -53,18 +53,20 @@
 				</td>
 			</tr>
 			{% for transaction in transactions %}
-				{% for posting in transaction.postings %}
+				{% for posting in transaction.postings if posting.amount >= 0.05 or posting.amount < -0.05 %}
 					<tr>
-						<td>{% if loop.index0 == 0 %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
-						<td>{% if loop.index0 == 0 %}{{ transaction.payee }}{% endif %}</td>
+						<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
+						<td>{% if loop.first %}{{ transaction.payee }}{% endif %}</td>
 						<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account}|urlencode }}">{{ (posting.account|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
 						<td style="text-align: right;">{% if posting.amount > 0 %}{{ posting.amount|b }}{% endif %}</td>
 						<td style="text-align: right;">{% if posting.amount < 0 %}{{ -posting.amount|b }}{% endif %}</td>
 						<td style="text-align: right;">
-							{% if posting.balance >= 0 %}
-								{{ posting.balance|b }} Dr
-							{% else %}
-								{{ -posting.balance|b }} Cr
+							{% if loop.last %}
+								{% if posting.balance >= 0 %}
+									{{ posting.balance|b }} Dr
+								{% else %}
+									{{ -posting.balance|b }} Cr
+								{% endif %}
 							{% endif %}
 						</td>
 					</tr>

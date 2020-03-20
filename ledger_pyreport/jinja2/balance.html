@@ -38,9 +38,8 @@
 
 {% macro do_accounts(root, label, invert, year_headers) %}
 	{% for account_class in balance_sheets[0].get_account(root).children if account_class in accounts %}
-		{% set isfirst = (loop.index0 == 0) %}
 		<tr>
-			{% if isfirst and year_headers %}
+			{% if loop.first and year_headers %}
 				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
 				{% for balance_sheet in balance_sheets %}<th class="h2">{{ balance_sheet.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
 			{% else %}
