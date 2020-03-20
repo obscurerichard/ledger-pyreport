@@ -1,7 +1,7 @@
 # Set up how we will call Ledger
 ledger_file: /path/to/ledger.journal
 ledger_args: ['--pedantic', '--recursive-aliases']
-report_currency: $
+report_currency: ['$', True] # True if prefix, False if suffix
 
 # Tell ledger-pyreport about the top-level account categories
 assets_account: Assets

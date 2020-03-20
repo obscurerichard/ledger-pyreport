@@ -34,8 +34,9 @@
 				<th class="h1">Dr</th>
 				<th class="h1">Cr</th>
 			</tr>
-			{% for account in trial_balance.accounts.values() %}
-				{% set balance = trial_balance.get_balance(account.name) %}
+			{% for account in accounts %}
+				{# Display in "cost basis" as we have already accounted for unrealised gains #}
+				{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
 				{% set trn_url = "/transactions?" + {'date': trial_balance.date.strftime('%Y-%m-%d'), 'pstart': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode %}
 				{% if balance != 0 %}
 					<tr>

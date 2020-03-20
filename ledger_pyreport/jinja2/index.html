@@ -47,6 +47,13 @@
 				<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
 				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
 			</form></li>
+			
+			<li><form action="{{ url_for('transactions') }}">
+				<button type="submit">General ledger</button>
+				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
+			</form></li>
 		</ul>
 		
 		<script>

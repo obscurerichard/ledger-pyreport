@@ -16,6 +16,8 @@
 
 from . import accounting
 from . import ledger
+from .config import config
+from .model import *
 
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -39,36 +41,45 @@ def trial():
 	
 	if compare == 0:
 		# Get trial balance
-		trial_balance = ledger.trial_balance(date, pstart)
+		l = ledger.raw_transactions_at_date(date)
+		trial_balance = accounting.trial_balance(l, date, pstart)
 		
-		total_dr = Decimal(0)
-		total_cr = Decimal(0)
+		report_currency = Currency(*config['report_currency'])
+		trial_balance = accounting.add_unrealized_gains(trial_balance, report_currency)
 		
-		for account in trial_balance.accounts.values():
-			balance = trial_balance.get_balance(account.name)
+		total_dr = Amount(0, report_currency)
+		total_cr = Amount(0, report_currency)
+		
+		for account in l.accounts.values():
+			# Display in "cost basis" as we have already accounted for unrealised gains
+			balance = trial_balance.get_balance(account).exchange(report_currency, True)
 			if balance > 0:
 				total_dr += balance
 			else:
 				total_cr -= balance
 		
-		return flask.render_template('trial.html', trial_balance=trial_balance, total_dr=total_dr, total_cr=total_cr)
+		return flask.render_template('trial.html', date=date, pstart=pstart, trial_balance=trial_balance, accounts=sorted(l.accounts.values(), key=lambda a: a.name), total_dr=total_dr, total_cr=total_cr, report_currency=report_currency)
 	else:
 		# Get multiple trial balances for comparison
 		dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
 		pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
 		
-		trial_balances = [ledger.trial_balance(d, p) for d, p in zip(dates, pstarts)]
+		report_currency = Currency(*config['report_currency'])
+		l = ledger.raw_transactions_at_date(date)
+		trial_balances = [accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency) for d, p in zip(dates, pstarts)]
 		
 		# Delete accounts with always zero balances
-		accounts = list(trial_balances[0].accounts.values())
+		accounts = list(trial_balances[0].ledger.accounts.values())
 		for account in accounts[:]:
-			if all(t.get_balance(account.name) == 0 for t in trial_balances):
+			if all(t.get_balance(account) == 0 for t in trial_balances):
 				accounts.remove(account)
 		
-		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=accounts)
+		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=sorted(accounts, key=lambda a: a.name), report_currency=report_currency)
 
 @app.route('/balance')
 def balance():
+	raise Exception('NYI')
+	
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	compare = int(flask.request.args['compare'])
@@ -89,6 +100,8 @@ def balance():
 
 @app.route('/pandl')
 def pandl():
+	raise Exception('NYI')
+	
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	compare = int(flask.request.args['compare'])
@@ -118,36 +131,45 @@ def pandl():
 def transactions():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	account = flask.request.args.get('account', None)
 	
-	trial_balance_pstart = ledger.trial_balance(pstart, pstart)
-	account = trial_balance_pstart.get_account(flask.request.args['account'])
-	opening_balance = trial_balance_pstart.get_balance(account.name)
+	# General ledger
+	l = ledger.raw_transactions_at_date(date)
 	
-	balance = opening_balance
-	transactions = account.get_transactions(date, pstart)
-	for transaction in transactions:
-		for posting in transaction.postings[:]:
-			if posting.account == account.name:
-				transaction.postings.remove(posting)
-			else:
-				posting.amount = -posting.amount # In terms of effect on this account
-				balance += posting.amount
-				posting.balance = balance
+	# Unrealized gains
+	report_currency = Currency(*config['report_currency'])
+	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date, pstart), report_currency).ledger
 	
-	trial_balance = ledger.trial_balance(date, pstart)
-	closing_balance = trial_balance.get_balance(account.name)
-	
-	return flask.render_template('transactions.html', date=date, pstart=pstart, account=account, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance)
+	if not account:
+		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart]
+		
+		total_dr = sum((p.amount for t in transactions for p in t.postings if p.amount > 0), Balance()).exchange(report_currency, True)
+		total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_currency, True)
+		
+		return flask.render_template('transactions.html', date=date, pstart=pstart, account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency)
+	else:
+		account = l.get_account(account)
+		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
+		
+		opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account).exchange(report_currency, True)
+		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).exchange(report_currency, True)
+		
+		return flask.render_template('transactions.html', date=date, pstart=pstart, account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency)
 
 @app.template_filter('a')
 def filter_amount(amt):
-	if amt < 0.005 and amt >= -0.005:
+	if amt.amount < 0.005 and amt.amount >= -0.005:
 		return flask.Markup('0.00&nbsp;')
 	elif amt > 0:
-		return flask.Markup('{:,.2f}&nbsp;'.format(amt).replace(',', '&#8239;')) # Narrow no-break space
+		return flask.Markup('{:,.2f}&nbsp;'.format(amt.amount).replace(',', '&#8239;')) # Narrow no-break space
 	else:
-		return flask.Markup('({:,.2f})'.format(-amt).replace(',', '&#8239;'))
+		return flask.Markup('({:,.2f})'.format(-amt.amount).replace(',', '&#8239;'))
 
 @app.template_filter('b')
 def filter_amount_positive(amt):
-	return flask.Markup('{:,.2f}'.format(amt).replace(',', '&#8239;'))
+	return flask.Markup('{:,.2f}'.format(amt.amount).replace(',', '&#8239;'))
+	#return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
+
+@app.template_filter('bb')
+def filter_balance_positive(balance):
+	return flask.Markup('<br>'.join(filter_amount_positive(a) for a in balance.amounts))

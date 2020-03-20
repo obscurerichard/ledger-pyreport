@@ -20,13 +20,17 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Account Transactions for {{ account.name }} as at {{ date.strftime('%d %B %Y') }}</title>
+		<title>{% if account %}Account Transactions{% else %}General Ledger{% endif %} as at {{ date.strftime('%d %B %Y') }}</title>
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 	</head>
 	<body>
-		<h1>Account Transactions</h1>
-		<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
+		{% if account %}
+			<h1>Account Transactions</h1>
+			<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
+		{% else %}
+			<h1>General Ledger</h1>
+		{% endif %}
 		<h2>As at {{ date.strftime('%d %B %Y') }}</h2>
 		
 		<table class="ledger">
@@ -36,56 +40,81 @@
 				<th style="max-width: 8em;">Account</th>
 				<th class="h1" style="text-align: right; width: 5em;">Dr</th>
 				<th class="h1" style="text-align: right; width: 5em;">Cr</th>
-				<th class="h1" style="text-align: right; width: 6em;">Balance</th>
+				{% if account %}<th class="h1" style="text-align: right; width: 6em;">Balance</th>{% endif %}
 			</tr>
-			<tr class="total">
-				<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
-				<td>Opening Balance</td>
-				<td></td>
-				<td style="text-align: right;"></td>
-				<td style="text-align: right;"></td>
-				<td style="text-align: right;">
-					{% if opening_balance >= 0 %}
-						{{ opening_balance|b }} Dr
-					{% else %}
-						{{ -opening_balance|b }} Cr
-					{% endif %}
-				</td>
-			</tr>
+			
+			{% set ns = namespace(balance=None) %}
+			{% if account %}
+				<tr class="total">
+					<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
+					<td>Opening Balance</td>
+					<td></td>
+					<td style="text-align: right;"></td>
+					<td style="text-align: right;"></td>
+					<td style="text-align: right;">
+						{% if opening_balance >= 0 %}
+							{{ opening_balance|b }} Dr
+						{% else %}
+							{{ -opening_balance|b }} Cr
+						{% endif %}
+					</td>
+				</tr>
+				{% set ns.balance = opening_balance %}
+			{% endif %}
+			
 			{% for transaction in transactions %}
-				{% for posting in transaction.postings if posting.amount >= 0.05 or posting.amount < -0.05 %}
+				{% for posting in transaction.postings if (posting.amount.amount >= 0.05 or posting.amount.amount < -0.05) and posting.account != account %}
+					{% set amount = posting.exchange(report_currency, transaction.date) %}
+					{% set ns.balance = ns.balance - amount %}
 					<tr>
 						<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
-						<td>{% if loop.first %}{{ transaction.payee }}{% endif %}</td>
-						<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account}|urlencode }}">{{ (posting.account|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
-						<td style="text-align: right;">{% if posting.amount > 0 %}{{ posting.amount|b }}{% endif %}</td>
-						<td style="text-align: right;">{% if posting.amount < 0 %}{{ -posting.amount|b }}{% endif %}</td>
-						<td style="text-align: right;">
-							{% if loop.last %}
-								{% if posting.balance >= 0 %}
-									{{ posting.balance|b }} Dr
-								{% else %}
-									{{ -posting.balance|b }} Cr
+						<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
+						<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account.name}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
+						{% if account %}
+							{# Reverse Dr/Cr so it's from the "perspective" of this account #}
+							<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+							<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+							<td style="text-align: right;">
+								{% if loop.last %}
+									{% if ns.balance >= 0 %}
+										{{ ns.balance|b }} Dr
+									{% else %}
+										{{ -ns.balance|b }} Cr
+									{% endif %}
 								{% endif %}
-							{% endif %}
-						</td>
+							</td>
+						{% else %}
+							<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+							<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+						{% endif %}
 					</tr>
 				{% endfor %}
 			{% endfor %}
-			<tr class="total">
-				<td>{{ date.strftime('%Y-%m-%d') }}</td>
-				<td>Closing Balance</td>
-				<td></td>
-				<td style="text-align: right;"></td>
-				<td style="text-align: right;"></td>
-				<td style="text-align: right;">
-					{% if closing_balance >= 0 %}
-						{{ closing_balance|b }} Dr
-					{% else %}
-						{{ -closing_balance|b }} Cr
-					{% endif %}
-				</td>
-			</tr>
+			
+			{% if account %}
+				<tr class="total">
+					<td>{{ date.strftime('%Y-%m-%d') }}</td>
+					<td>Closing Balance</td>
+					<td></td>
+					<td style="text-align: right;"></td>
+					<td style="text-align: right;"></td>
+					<td style="text-align: right;">
+						{% if closing_balance >= 0 %}
+							{{ closing_balance|b }} Dr
+						{% else %}
+							{{ -closing_balance|b }} Cr
+						{% endif %}
+					</td>
+				</tr>
+			{% else %}
+				<tr class="total">
+					<td>{{ date.strftime('%Y-%m-%d') }}</td>
+					<td>Total</td>
+					<td></td>
+					<td style="text-align: right;">{{ total_dr|b }}</td>
+					<td style="text-align: right;">{{ -total_cr|b }}</td>
+				</tr>
+			{% endif %}
 		</table>
 	</body>
 </html>

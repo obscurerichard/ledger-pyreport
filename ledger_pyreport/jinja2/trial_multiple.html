@@ -37,7 +37,7 @@
 				<tr>
 					<td>{{ account.name }}</td>
 					{% for trial_balance in trial_balances %}
-						{% set balance = trial_balance.get_balance(account.name) %}
+						{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
 						<td>{% if balance != 0 %}{{ balance|a }}{% endif %}</td>
 					{% endfor %}
 				</tr>

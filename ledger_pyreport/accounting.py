@@ -17,18 +17,36 @@
 import csv
 from decimal import Decimal
 
-from . import ledger
+from .model import *
 
-# Generate balance sheet
+def add_unrealized_gains(tb, currency):
+	for account in list(tb.ledger.accounts.values()):
+		if not account.is_market:
+			continue
+		
+		total_cost = tb.get_balance(account).exchange(currency, True)
+		total_market = tb.get_balance(account).exchange(currency, False, tb.date, tb.ledger)
+		unrealized_gain = total_market - total_cost
+		
+		if unrealized_gain != 0:
+			transaction = Transaction(tb.ledger, None, tb.date, '<Unrealized Gains>')
+			transaction.postings.append(Posting(transaction, account, unrealized_gain))
+			transaction.postings.append(Posting(transaction, tb.ledger.get_account(config['unrealized_gains']), -unrealized_gain))
+			tb.ledger.transactions.append(transaction)
+	
+	return trial_balance(tb.ledger, tb.date, tb.pstart)
 
-def balance_sheet(date, pstart):
-	# Get trial balance
-	trial_balance = ledger.trial_balance(date, pstart)
+def trial_balance(ledger, date, pstart):
+	tb = TrialBalance(ledger, date, pstart)
 	
-	# Calculate Profit/Loss
-	total_pandl = trial_balance.get_total(ledger.config['income_account']) + trial_balance.get_total(ledger.config['expenses_account'])
+	for transaction in ledger.transactions:
+		if transaction.date > date:
+			continue
+		
+		for posting in transaction.postings:
+			if (posting.account.is_income or posting.account.is_expense) and transaction.date < pstart:
+				tb.balances[config['retained_earnings']] = tb.get_balance(ledger.get_account(config['retained_earnings'])) + posting.amount
+			else:
+				tb.balances[posting.account.name] = tb.get_balance(posting.account) + posting.amount
 	
-	# Add Current Year Earnings account
-	trial_balance.set_balance(ledger.config['current_year_earnings'], trial_balance.get_balance(ledger.config['current_year_earnings']) + total_pandl)
-	
-	return trial_balance
+	return tb
