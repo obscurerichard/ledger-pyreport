@@ -34,7 +34,7 @@
 				<td>{{ account.name }}</td>
 				{% for trial_balance in trial_balances %}
 					{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
-					<td>{% if balance != 0 %}{{ balance|a }}{% endif %}</td>
+					<td>{% if balance != 0 %}<a href="/transactions?{{ {'date': trial_balance.date.strftime('%Y-%m-%d'), 'pstart': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ balance|a }}</a>{% endif %}</td>
 				{% endfor %}
 			</tr>
 		{% endfor %}

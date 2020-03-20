@@ -123,6 +123,10 @@ class Account:
 	@property
 	def is_liability(self):
 		return self.matches(config['liabilities_account'])
+	@property
+	def is_cash(self):
+		# Is this a cash asset?
+		return any(self.matches(a) for a in config['cash_asset_accounts'])
 	
 	@property
 	def is_cost(self):

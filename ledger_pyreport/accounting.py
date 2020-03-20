@@ -19,6 +19,8 @@ from decimal import Decimal
 
 from .model import *
 
+# Generate a trial balance
+# Perform closing of books based on specified dates
 def trial_balance(ledger, date, pstart):
 	tb = TrialBalance(ledger, date, pstart)
 	
@@ -34,6 +36,7 @@ def trial_balance(ledger, date, pstart):
 	
 	return tb
 
+# Adjust (in place) a trial balance for unrealized gains
 def add_unrealized_gains(tb, currency):
 	for account in list(tb.ledger.accounts.values()):
 		if not account.is_market:
@@ -51,6 +54,8 @@ def add_unrealized_gains(tb, currency):
 	
 	return trial_balance(tb.ledger, tb.date, tb.pstart)
 
+# Adjust (in place) a trial balance to include a Current Year Earnings account
+# Suitable for display on a balance sheet
 def balance_sheet(tb):
 	# Calculate Profit/Loss
 	total_pandl = tb.get_total(tb.ledger.get_account(config['income_account'])) + tb.get_total(tb.ledger.get_account(config['expenses_account']))
@@ -59,3 +64,28 @@ def balance_sheet(tb):
 	tb.balances[config['current_year_earnings']] = tb.get_balance(tb.ledger.get_account(config['current_year_earnings'])) + total_pandl
 	
 	return tb
+
+# Adjust (in place) a ledger to convert accounting to a cash basis
+def cash_basis(ledger, currency):
+	for transaction in ledger.transactions:
+		non_cash_postings = [p for p in transaction.postings if not (p.account.is_cash or p.account.is_income or p.account.is_expense or p.account.is_equity)]
+		
+		if non_cash_postings:
+			# We have liabilities or non-cash assets which need to be excluded
+			
+			cash_postings = [p for p in transaction.postings if p.account.is_income or p.account.is_expense or p.account.is_equity]
+			cash_total = sum((p.amount for p in cash_postings), Balance()).exchange(currency, True).amount
+			
+			if cash_postings:
+				for posting in non_cash_postings:
+					posting_amount = posting.amount.exchange(currency, True).amount
+					for posting_xfer in cash_postings:
+						posting_xfer_amount = posting_xfer.amount.exchange(currency, True).amount
+						transaction.postings.append(Posting(transaction, posting_xfer.account, Amount(posting_amount * posting_xfer_amount / cash_total, currency)))
+					
+					transaction.postings.remove(posting)
+			else:
+				for posting in non_cash_postings:
+					posting.account = ledger.get_account(config['cash_other_income'])
+	
+	return ledger

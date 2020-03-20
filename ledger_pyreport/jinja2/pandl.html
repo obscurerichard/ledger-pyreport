@@ -22,14 +22,14 @@
 	<tr>
 		<td style="padding-left: calc(2px + {{ level }}em);">
 			{% if pandls|length == 1 %}
-				<a href="/transactions?{{ {'date': pandls[0].date.strftime('%Y-%m-%d'), 'pstart': pandls[0].pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ account.bits[-1] }}</a>
+				<a href="/transactions?{{ {'date': pandls[0].date.strftime('%Y-%m-%d'), 'pstart': pandls[0].pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ account.bits[-1] }}</a>
 			{% else %}
 				{{ account.bits[-1] }}
 			{% endif %}
 		</td>
 		{% for pandl in pandls %}
 			{% set amount = (-pandl.get_balance(account) if invert else pandl.get_balance(account)).exchange(report_currency, True) %}
-			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
+			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
 		{% endfor %}
 	</tr>
 	
