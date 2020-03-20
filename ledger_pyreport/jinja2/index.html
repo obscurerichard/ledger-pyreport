@@ -16,60 +16,57 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<title>ledger-pyreport</title>
-	</head>
-	<body>
-		<ul>
-			<li><form action="{{ url_for('trial') }}">
-				<button type="submit">Trial balance</button>
-				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
-				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
-			</form></li>
-			
-			<li><form action="{{ url_for('balance') }}">
-				<button type="submit">Balance sheet</button>
-				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
-				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
-			</form></li>
-			
-			<li><form action="{{ url_for('pandl') }}">
-				<button type="submit">Income statement</button>
-				<label>Begin date: <input name="date_beg" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>End date: <input name="date_end" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
-				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
-			</form></li>
-			
-			<li><form action="{{ url_for('transactions') }}">
-				<button type="submit">General ledger</button>
-				<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-				{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
-			</form></li>
-		</ul>
+{% extends 'base.html' %}
+
+{% block title %}ledger-pyreport{% endblock %}
+
+{% block body %}
+	<ul>
+		<li><form action="{{ url_for('trial') }}">
+			<button type="submit">Trial balance</button>
+			<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
+		</form></li>
 		
-		<script>
-			// Called whenever a text input changes - update others to match
-			function txtc(el) {
-				for (var e2 of document.querySelectorAll('input[name="' + el.name + '"]')) {
-					e2.value = el.value;
-				}
+		<li><form action="{{ url_for('balance') }}">
+			<button type="submit">Balance sheet</button>
+			<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
+		</form></li>
+		
+		<li><form action="{{ url_for('pandl') }}">
+			<button type="submit">Income statement</button>
+			<label>Begin date: <input name="date_beg" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>End date: <input name="date_end" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Compare <input name="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
+		</form></li>
+		
+		<li><form action="{{ url_for('transactions') }}">
+			<button type="submit">General ledger</button>
+			<label>Date: <input name="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Period start: <input name="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			{#<label><input name="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>#}
+		</form></li>
+	</ul>
+	
+	<script>
+		// Called whenever a text input changes - update others to match
+		function txtc(el) {
+			for (var e2 of document.querySelectorAll('input[name="' + el.name + '"]')) {
+				e2.value = el.value;
 			}
-			
-			// Ditto for checkboxes
-			function chbc(el) {
-				for (var e2 of document.querySelectorAll('input[name="' + el.name + '"]')) {
-					e2.checked = el.checked;
-				}
+		}
+		
+		// Ditto for checkboxes
+		function chbc(el) {
+			for (var e2 of document.querySelectorAll('input[name="' + el.name + '"]')) {
+				e2.checked = el.checked;
 			}
-		</script>
-	</body>
-</html>
+		}
+	</script>
+{% endblock %}

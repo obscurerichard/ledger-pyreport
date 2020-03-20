@@ -16,41 +16,36 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<title>Trial Balance as at {{ trial_balance.date.strftime('%d %B %Y') }}</title>
-		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-	</head>
-	<body>
-		<h1>Trial Balance</h1>
-		<h2>As at {{ trial_balance.date.strftime('%d %B %Y') }}</h2>
-		
-		<table class="ledger onedesc">
-			<tr>
-				<th></th>
-				<th class="h1">Dr</th>
-				<th class="h1">Cr</th>
-			</tr>
-			{% for account in accounts %}
-				{# Display in "cost basis" as we have already accounted for unrealised gains #}
-				{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
-				{% set trn_url = "/transactions?" + {'date': trial_balance.date.strftime('%Y-%m-%d'), 'pstart': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode %}
-				{% if balance != 0 %}
-					<tr>
-						<td><a href="{{ trn_url }}">{{ account.name }}</a></td>
-						<td>{% if balance > 0 %}<a href="{{ trn_url }}">{{ balance|b }}</a>{% endif %}</td>
-						<td>{% if balance < 0 %}<a href="{{ trn_url }}">{{ -balance|b }}</a>{% endif %}</td>
-					</tr>
-				{% endif %}
-			{% endfor %}
-			<tr class="total">
-				<td></td>
-				<td>{{ total_dr|b }}</td>
-				<td>{{ total_cr|b }}</td>
-			</tr>
-		</table>
-	</body>
-</html>
+{% extends 'base_report.html' %}
+
+{% block title %}Trial Balance as at {{ trial_balance.date.strftime('%d %B %Y') }}{% endblock %}
+
+{% block report %}
+	<h1>Trial Balance</h1>
+	<h2>As at {{ trial_balance.date.strftime('%d %B %Y') }}</h2>
+	
+	<table class="ledger onedesc">
+		<tr>
+			<th></th>
+			<th class="h1">Dr</th>
+			<th class="h1">Cr</th>
+		</tr>
+		{% for account in accounts %}
+			{# Display in "cost basis" as we have already accounted for unrealised gains #}
+			{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
+			{% set trn_url = "/transactions?" + {'date': trial_balance.date.strftime('%Y-%m-%d'), 'pstart': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode %}
+			{% if balance != 0 %}
+				<tr>
+					<td><a href="{{ trn_url }}">{{ account.name }}</a></td>
+					<td>{% if balance > 0 %}<a href="{{ trn_url }}">{{ balance|b }}</a>{% endif %}</td>
+					<td>{% if balance < 0 %}<a href="{{ trn_url }}">{{ -balance|b }}</a>{% endif %}</td>
+				</tr>
+			{% endif %}
+		{% endfor %}
+		<tr class="total">
+			<td></td>
+			<td>{{ total_dr|b }}</td>
+			<td>{{ total_cr|b }}</td>
+		</tr>
+	</table>
+{% endblock %}

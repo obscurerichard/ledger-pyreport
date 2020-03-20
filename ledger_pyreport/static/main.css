@@ -72,8 +72,21 @@ table.ledger a:hover {
 	text-decoration: underline;
 }
 
+a.homelink {
+	color: #888;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
 @media screen {
 	body {
 		padding: 2em;
+	}
+}
+
+@media print {
+	a.homelink {
+		display: none;
 	}
 }

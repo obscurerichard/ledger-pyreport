@@ -16,27 +16,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% extends 'base_report.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Trial Balance as at {{ trial_balances[0].date.strftime('%d %B %Y') }}{% endblock %}
-
-{% block report %}
-	<h1>Trial Balance</h1>
-	<h2>As at {{ trial_balances[0].date.strftime('%d %B %Y') }}</h2>
+{% block body %}
+	<a class="homelink" href="/">Home</a>
 	
-	<table class="ledger onedesc">
-		<tr>
-			<th></th>
-			{% for trial_balance in trial_balances %}<th class="h2">{{ trial_balance.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
-		</tr>
-		{% for account in accounts %}
-			<tr>
-				<td>{{ account.name }}</td>
-				{% for trial_balance in trial_balances %}
-					{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
-					<td>{% if balance != 0 %}{{ balance|a }}{% endif %}</td>
-				{% endfor %}
-			</tr>
-		{% endfor %}
-	</table>
+	{% block report %}
+	{% endblock %}
 {% endblock %}

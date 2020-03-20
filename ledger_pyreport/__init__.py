@@ -98,6 +98,14 @@ def balance():
 	
 	return flask.render_template('balance.html', ledger=l, balance_sheets=balance_sheets, accounts=accounts, config=config, report_currency=report_currency)
 
+def describe_period(date_end, date_beg):
+	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
+		return 'year ended {}'.format(date_end.strftime('%d %B %Y'))
+	elif date_beg == ledger.financial_year(date_end):
+		return 'financial year to {}'.format(date_end.strftime('%d %B %Y'))
+	else:
+		return 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
+
 @app.route('/pandl')
 def pandl():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
@@ -118,14 +126,7 @@ def pandl():
 		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in pandls):
 			accounts.remove(account)
 	
-	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
-		period = 'year ended {}'.format(date_end.strftime('%d %B %Y'))
-	elif date_beg == ledger.financial_year(date_end):
-		period = 'financial year to {}'.format(date_end.strftime('%d %B %Y'))
-	else:
-		period = 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
-	
-	return flask.render_template('pandl.html', period=period, ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency)
+	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency)
 
 @app.route('/transactions')
 def transactions():
@@ -154,7 +155,7 @@ def transactions():
 		opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account).exchange(report_currency, True)
 		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).exchange(report_currency, True)
 		
-		return flask.render_template('transactions.html', date=date, pstart=pstart, account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency)
+		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, timedelta=timedelta)
 
 @app.template_filter('a')
 def filter_amount(amt):

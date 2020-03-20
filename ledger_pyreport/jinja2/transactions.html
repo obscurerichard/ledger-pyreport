@@ -16,105 +16,102 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<title>{% if account %}Account Transactions{% else %}General Ledger{% endif %} as at {{ date.strftime('%d %B %Y') }}</title>
-		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-	</head>
-	<body>
-		{% if account %}
-			<h1>Account Transactions</h1>
-			<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
-		{% else %}
-			<h1>General Ledger</h1>
-		{% endif %}
-		<h2>As at {{ date.strftime('%d %B %Y') }}</h2>
+{% extends 'base_report.html' %}
+
+{% block title %}{% if account %}Account Transactions{% else %}General Ledger{% endif %} as at {{ date.strftime('%d %B %Y') }}{% endblock %}
+
+{% block report %}
+	{% if account %}
+		<h1>Account Transactions</h1>
+		<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
+	{% else %}
+		<h1>General Ledger</h1>
+	{% endif %}
+	<h2>For the {{ period }}</h2>
+	
+	<table class="ledger">
+		<tr>
+			<th style="width: 5em;">Date</th>
+			<th>Description</th>
+			<th style="max-width: 8em;">Account</th>
+			<th class="h1" style="text-align: right; width: 5em;">Dr</th>
+			<th class="h1" style="text-align: right; width: 5em;">Cr</th>
+			{% if account %}<th class="h1" style="text-align: right; width: 6em;">Balance</th>{% endif %}
+		</tr>
 		
-		<table class="ledger">
-			<tr>
-				<th style="width: 5em;">Date</th>
-				<th>Description</th>
-				<th style="max-width: 8em;">Account</th>
-				<th class="h1" style="text-align: right; width: 5em;">Dr</th>
-				<th class="h1" style="text-align: right; width: 5em;">Cr</th>
-				{% if account %}<th class="h1" style="text-align: right; width: 6em;">Balance</th>{% endif %}
-			</tr>
-			
-			{% set ns = namespace(balance=None) %}
-			{% if account %}
-				<tr class="total">
-					<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
-					<td>Opening Balance</td>
-					<td></td>
-					<td style="text-align: right;"></td>
-					<td style="text-align: right;"></td>
-					<td style="text-align: right;">
+		{% set ns = namespace(balance=None) %}
+		{% if account %}
+			<tr class="total">
+				<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
+				<td><a href="/transactions?{{ {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">Opening Balance</a></td>
+				<td></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;">
+					<a href="/transactions?{{ {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">
 						{% if opening_balance >= 0 %}
 							{{ opening_balance|b }} Dr
 						{% else %}
 							{{ -opening_balance|b }} Cr
 						{% endif %}
-					</td>
-				</tr>
-				{% set ns.balance = opening_balance %}
-			{% endif %}
-			
-			{% for transaction in transactions %}
-				{% for posting in transaction.postings if (posting.amount.amount >= 0.05 or posting.amount.amount < -0.05) and posting.account != account %}
-					{% set amount = posting.exchange(report_currency, transaction.date) %}
-					<tr>
-						<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
-						<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
-						<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account.name}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
-						{% if account %}
-							{# Reverse Dr/Cr so it's from the "perspective" of this account #}
-							{% set ns.balance = ns.balance - amount %}
-							<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
-							<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
-							<td style="text-align: right;">
-								{% if loop.last %}
-									{% if ns.balance >= 0 %}
-										{{ ns.balance|b }} Dr
-									{% else %}
-										{{ -ns.balance|b }} Cr
-									{% endif %}
+					</a>
+				</td>
+			</tr>
+			{% set ns.balance = opening_balance %}
+		{% endif %}
+		
+		{% for transaction in transactions %}
+			{% for posting in transaction.postings if (posting.amount.amount >= 0.05 or posting.amount.amount < -0.05) and posting.account != account %}
+				{% set amount = posting.exchange(report_currency, transaction.date) %}
+				<tr>
+					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
+					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
+					<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account.name}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
+					{% if account %}
+						{# Reverse Dr/Cr so it's from the "perspective" of this account #}
+						{% set ns.balance = ns.balance - amount %}
+						<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+						<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+						<td style="text-align: right;">
+							{% if loop.last %}
+								{% if ns.balance >= 0 %}
+									{{ ns.balance|b }} Dr
+								{% else %}
+									{{ -ns.balance|b }} Cr
 								{% endif %}
-							</td>
-						{% else %}
-							<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
-							<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
-						{% endif %}
-					</tr>
-				{% endfor %}
+							{% endif %}
+						</td>
+					{% else %}
+						<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+						<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+					{% endif %}
+				</tr>
 			{% endfor %}
-			
-			{% if account %}
-				<tr class="total">
-					<td>{{ date.strftime('%Y-%m-%d') }}</td>
-					<td>Closing Balance</td>
-					<td></td>
-					<td style="text-align: right;"></td>
-					<td style="text-align: right;"></td>
-					<td style="text-align: right;">
-						{% if closing_balance >= 0 %}
-							{{ closing_balance|b }} Dr
-						{% else %}
-							{{ -closing_balance|b }} Cr
-						{% endif %}
-					</td>
-				</tr>
-			{% else %}
-				<tr class="total">
-					<td>{{ date.strftime('%Y-%m-%d') }}</td>
-					<td>Total</td>
-					<td></td>
-					<td style="text-align: right;">{{ total_dr|b }}</td>
-					<td style="text-align: right;">{{ -total_cr|b }}</td>
-				</tr>
-			{% endif %}
-		</table>
-	</body>
-</html>
+		{% endfor %}
+		
+		{% if account %}
+			<tr class="total">
+				<td>{{ date.strftime('%Y-%m-%d') }}</td>
+				<td>Closing Balance</td>
+				<td></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;"></td>
+				<td style="text-align: right;">
+					{% if closing_balance >= 0 %}
+						{{ closing_balance|b }} Dr
+					{% else %}
+						{{ -closing_balance|b }} Cr
+					{% endif %}
+				</td>
+			</tr>
+		{% else %}
+			<tr class="total">
+				<td>{{ date.strftime('%Y-%m-%d') }}</td>
+				<td>Total</td>
+				<td></td>
+				<td style="text-align: right;">{{ total_dr|b }}</td>
+				<td style="text-align: right;">{{ -total_cr|b }}</td>
+			</tr>
+		{% endif %}
+	</table>
+{% endblock %}
