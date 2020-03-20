@@ -20,14 +20,30 @@
 	<tr>
 		<td style="padding-left: calc(2px + {{ level }}em);">
 			{% if balance_sheets|length == 1 %}
-				<a href="/transactions?{{ {'date': balance_sheets[0].date.strftime('%Y-%m-%d'), 'pstart': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ account.bits[-1] }}</a>
+				{% if account.name == config['current_year_earnings'] %}
+					<a href="/pandl?{{ {'date_end': balance_sheets[0].date.strftime('%Y-%m-%d'), 'date_beg': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'compare': '0'}|urlencode }}">
+				{% else %}
+					<a href="/transactions?{{ {'date': balance_sheets[0].date.strftime('%Y-%m-%d'), 'pstart': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">
+				{% endif %}
+					{{ account.bits[-1] }}
+				</a>
 			{% else %}
 				{{ account.bits[-1] }}
 			{% endif %}
 		</td>
 		{% for balance_sheet in balance_sheets %}
 			{% set amount = (-balance_sheet.get_balance(account) if invert else balance_sheet.get_balance(account)).exchange(report_currency, True) %}
-			<td>{% if amount != 0 %}<a href="/transactions?{{ {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
+			<td>
+				{% if amount != 0 %}
+					{% if account.name == config['current_year_earnings'] %}
+						<a href="/pandl?{{ {'date_end': balance_sheet.date.strftime('%Y-%m-%d'), 'date_beg': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'compare': '0'}|urlencode }}">
+					{% else %}
+						<a href="/transactions?{{ {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name}|urlencode }}">
+					{% endif %}
+						{{ amount|a }}
+					</a>
+				{% endif %}
+			</td>
 		{% endfor %}
 	</tr>
 	
