@@ -16,6 +16,7 @@
 
 import csv
 from decimal import Decimal
+import math
 
 from .model import *
 
@@ -65,27 +66,64 @@ def balance_sheet(tb):
 	
 	return tb
 
-# Adjust (in place) a ledger to convert accounting to a cash basis
-def cash_basis(ledger, currency):
-	for transaction in ledger.transactions:
-		non_cash_postings = [p for p in transaction.postings if not (p.account.is_cash or p.account.is_income or p.account.is_expense or p.account.is_equity)]
-		
-		if non_cash_postings:
-			# We have liabilities or non-cash assets which need to be excluded
-			
-			cash_postings = [p for p in transaction.postings if p.account.is_income or p.account.is_expense or p.account.is_equity]
-			cash_total = sum((p.amount for p in cash_postings), Balance()).exchange(currency, True).amount
-			
-			if cash_postings:
-				for posting in non_cash_postings:
-					posting_amount = posting.amount.exchange(currency, True).amount
-					for posting_xfer in cash_postings:
-						posting_xfer_amount = posting_xfer.amount.exchange(currency, True).amount
-						transaction.postings.append(Posting(transaction, posting_xfer.account, Amount(posting_amount * posting_xfer_amount / cash_total, currency)))
+def account_to_cash(account, currency):
+	# Apply FIFO methodology to match postings
+	balance = [] # list of [posting, amount to balance, amount remaining, balancing list of [posting, amount balanced]]
+	
+	for transaction in account.ledger.transactions[:]:
+		if any(p.account == account for p in transaction.postings):
+			for posting in transaction.postings[:]:
+				if posting.account == account:
+					#transaction.postings.remove(posting)
+					pass
+				else:
+					# Try to balance postings
+					amount_to_balance = posting.amount.exchange(currency, True).amount
 					
-					transaction.postings.remove(posting)
+					while amount_to_balance != 0:
+						balancing_posting = next((b for b in balance if b[2] != 0 and math.copysign(1, b[2]) != math.copysign(1, amount_to_balance)), None)
+						if balancing_posting is None:
+							break
+						
+						if abs(balancing_posting[2]) >= abs(amount_to_balance):
+							balancing_posting[3].append([posting, amount_to_balance])
+							balancing_posting[2] += amount_to_balance
+							amount_to_balance = Decimal(0)
+							break
+						else:
+							balancing_posting[3].append([posting, -balancing_posting[2]])
+							amount_to_balance += balancing_posting[2]
+							balancing_posting[2] = Decimal(0)
+					
+					if amount_to_balance != 0:
+						# New unbalanced remainder
+						balance.append([posting, amount_to_balance, amount_to_balance, []])
+			
+			transaction.postings = []
+	
+	# Finalise balanced postings
+	for orig_posting, amount_to_balance, amount_remaining, balancing_postings in balance:
+		posting = Posting(orig_posting.transaction, orig_posting.account, Amount(amount_to_balance, currency))
+		posting.transaction.postings.append(posting)
+		
+		for balancing_posting, amount_balanced in balancing_postings:
+			posting.transaction.postings.append(Posting(posting.transaction, balancing_posting.account, Amount(amount_balanced, currency)))
+			
+			if balancing_posting in balancing_posting.transaction.postings:
+				balancing_posting.transaction.postings.remove(balancing_posting)
+		
+		if amount_remaining != 0:
+			if account.is_asset:
+				# Cash - charge any unbalanced remainder to Other Income
+				posting.transaction.postings.append(Posting(posting.transaction, account.ledger.get_account(config['cash_other_income']), Amount(-amount_remaining, currency)))
 			else:
-				for posting in non_cash_postings:
-					posting.account = ledger.get_account(config['cash_other_income'])
+				# Liabilities, etc. - discard any unbalanced remainder
+				posting.amount.amount -= amount_remaining
+
+# Adjust (in place) a ledger to convert accounting to a cash basis
+def ledger_to_cash(ledger, currency):
+	for account in list(ledger.accounts.values()):
+		if not (account.is_cash or account.is_income or account.is_expense or account.is_equity):
+			account_to_cash(account, currency)
 	
 	return ledger

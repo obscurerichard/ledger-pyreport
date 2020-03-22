@@ -45,7 +45,7 @@ def trial():
 		# Get trial balance
 		l = ledger.raw_transactions_at_date(date)
 		if cash:
-			l = accounting.cash_basis(l, report_currency)
+			l = accounting.ledger_to_cash(l, report_currency)
 		trial_balance = accounting.trial_balance(l, date, pstart)
 		
 		trial_balance = accounting.add_unrealized_gains(trial_balance, report_currency)
@@ -69,7 +69,7 @@ def trial():
 		
 		l = ledger.raw_transactions_at_date(date)
 		if cash:
-			l = accounting.cash_basis(l, report_currency)
+			l = accounting.ledger_to_cash(l, report_currency)
 		trial_balances = [accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency) for d, p in zip(dates, pstarts)]
 		
 		# Delete accounts with always zero balances
@@ -93,7 +93,7 @@ def balance():
 	report_currency = Currency(*config['report_currency'])
 	l = ledger.raw_transactions_at_date(date)
 	if cash:
-		l = accounting.cash_basis(l, report_currency)
+		l = accounting.ledger_to_cash(l, report_currency)
 	balance_sheets = [accounting.balance_sheet(accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency)) for d, p in zip(dates, pstarts)]
 	
 	# Delete accounts with always zero balances
@@ -125,7 +125,7 @@ def pandl():
 	report_currency = Currency(*config['report_currency'])
 	l = ledger.raw_transactions_at_date(date_end)
 	if cash:
-		l = accounting.cash_basis(l, report_currency)
+		l = accounting.ledger_to_cash(l, report_currency)
 	pandls = [accounting.trial_balance(l, de, db) for de, db in zip(dates_end, dates_beg)]
 	
 	# Delete accounts with always zero balances
@@ -148,7 +148,7 @@ def transactions():
 	# General ledger
 	l = ledger.raw_transactions_at_date(date)
 	if cash:
-		l = accounting.cash_basis(l, report_currency)
+		l = accounting.ledger_to_cash(l, report_currency)
 	
 	# Unrealized gains
 	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date, pstart), report_currency).ledger
@@ -159,7 +159,7 @@ def transactions():
 		total_dr = sum((p.amount for t in transactions for p in t.postings if p.amount > 0), Balance()).exchange(report_currency, True)
 		total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_currency, True)
 		
-		return flask.render_template('transactions.html', date=date, pstart=pstart, account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
+		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
 	else:
 		account = l.get_account(account)
 		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
@@ -168,6 +168,8 @@ def transactions():
 		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).exchange(report_currency, True)
 		
 		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
+
+# Template filters
 
 @app.template_filter('a')
 def filter_amount(amt):
@@ -186,3 +188,41 @@ def filter_amount_positive(amt):
 @app.template_filter('bb')
 def filter_balance_positive(balance):
 	return flask.Markup('<br>'.join(filter_amount_positive(a) for a in balance.amounts))
+
+# Debug views
+
+@app.route('/debug/noncash_transactions')
+def debug_noncash_transactions():
+	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
+	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	account = flask.request.args.get('account')
+	
+	report_currency = Currency(*config['report_currency'])
+	
+	l = ledger.raw_transactions_at_date(date)
+	account = l.get_account(account)
+	
+	transactions = [t for t in l.transactions if any(p.account == account for p in t.postings)]
+	
+	accounting.account_to_cash(account, report_currency)
+	
+	return flask.render_template('debug_noncash_transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, report_currency=report_currency)
+
+@app.route('/debug/imbalances')
+def debug_imbalances():
+	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
+	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	cash = flask.request.args.get('cash', False)
+	
+	report_currency = Currency(*config['report_currency'])
+	
+	l = ledger.raw_transactions_at_date(date)
+	if cash:
+		l = accounting.ledger_to_cash(l, report_currency)
+	
+	transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and abs(sum((p.amount for p in t.postings), Balance()).exchange(report_currency, True).amount) > 0.005]
+	
+	total_dr = sum((p.amount for t in transactions for p in t.postings if p.amount > 0), Balance()).exchange(report_currency, True)
+	total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_currency, True)
+	
+	return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
