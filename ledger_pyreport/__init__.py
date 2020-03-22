@@ -97,7 +97,7 @@ def balance():
 	balance_sheets = [accounting.balance_sheet(accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency)) for d, p in zip(dates, pstarts)]
 	
 	# Delete accounts with always zero balances
-	accounts = sorted(l.accounts.values(), key=lambda a: a.name)
+	accounts = list(l.accounts.values())
 	for account in accounts[:]:
 		if all(b.get_balance(account) == 0 and b.get_total(account) == 0 for b in balance_sheets):
 			accounts.remove(account)
@@ -129,7 +129,7 @@ def pandl():
 	pandls = [accounting.trial_balance(l, de, db) for de, db in zip(dates_end, dates_beg)]
 	
 	# Delete accounts with always zero balances
-	accounts = sorted(l.accounts.values(), key=lambda a: a.name)
+	accounts = list(l.accounts.values())
 	for account in accounts[:]:
 		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in pandls):
 			accounts.remove(account)

@@ -49,13 +49,13 @@
 		{% endfor %}
 	</tr>
 	
-	{% for child in account.children if child in accounts %}
+	{% for child in account.children|sort(attribute='name') if child in accounts %}
 		{{ print_rows(child, invert, level + 1) }}
 	{% endfor %}
 {% endmacro %}
 
 {% macro do_accounts(root, label, invert, year_headers) %}
-	{% for account_class in root.children if account_class in accounts %}
+	{% for account_class in root.children|sort(attribute='name') if account_class in accounts %}
 		<tr>
 			{% if loop.first and year_headers %}
 				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
@@ -65,7 +65,7 @@
 			{% endif %}
 		</tr>
 		
-		{% for account in account_class.children if account in accounts %}
+		{% for account in account_class.children|sort(attribute='name') if account in accounts %}
 			{{ print_rows(account, invert=invert) }}
 		{% endfor %}
 		
@@ -104,7 +104,7 @@
 		{# Equity #}
 		<tr><th class="h1" colspan="{{ balance_sheets|length + 1 }}">Equity</th></tr>
 		
-		{% for account in ledger.get_account(config['equity_account']).children if account in accounts %}
+		{% for account in ledger.get_account(config['equity_account']).children|sort(attribute='name') if account in accounts %}
 			{{ print_rows(account, invert=True) }}
 		{% endfor %}
 		
