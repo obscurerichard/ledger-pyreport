@@ -41,14 +41,15 @@
 		
 		{% set ns = namespace(balance=None) %}
 		{% if account %}
+			{% set prevlink = '/transactions?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr class="total">
-				<td>{{ pstart.strftime('%Y-%m-%d') }}</td>
-				<td><a href="/transactions?{{ {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">Opening Balance</a></td>
+				<td><a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a></td>
+				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
 				<td style="text-align: right;"></td>
 				<td style="text-align: right;"></td>
 				<td style="text-align: right;">
-					<a href="/transactions?{{ {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">
+					<a href="{{ prevlink }}">
 						{% if opening_balance >= 0 %}
 							{{ opening_balance|b }} Dr
 						{% else %}
