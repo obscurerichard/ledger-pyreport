@@ -36,7 +36,7 @@
 		{% for balance_sheet in balance_sheets %}
 			{% set amount = (-balance_sheet.get_balance(account) if invert else balance_sheet.get_balance(account)).exchange(report_currency, True) %}
 			<td>
-				{% if amount != 0 %}
+				{% if not amount.near_zero %}
 					{% if account.name == config['current_year_earnings'] %}
 						<a href="/pandl?{{ {'date_end': balance_sheet.date.strftime('%Y-%m-%d'), 'date_beg': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'compare': '0', 'cash': 'on' if cash else ''}|urlencode }}">
 					{% else %}

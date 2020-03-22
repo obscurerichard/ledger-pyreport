@@ -99,7 +99,7 @@ def balance():
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())
 	for account in accounts[:]:
-		if all(b.get_balance(account) == 0 and b.get_total(account) == 0 for b in balance_sheets):
+		if all(b.get_balance(account).exchange(report_currency, True).near_zero and b.get_total(account).exchange(report_currency, True).near_zero for b in balance_sheets):
 			accounts.remove(account)
 	
 	return flask.render_template('balance.html', ledger=l, balance_sheets=balance_sheets, accounts=accounts, config=config, report_currency=report_currency, cash=cash)
@@ -173,7 +173,7 @@ def transactions():
 
 @app.template_filter('a')
 def filter_amount(amt):
-	if amt.amount < 0.005 and amt.amount >= -0.005:
+	if amt.near_zero:
 		return flask.Markup('0.00&nbsp;')
 	elif amt > 0:
 		return flask.Markup('{:,.2f}&nbsp;'.format(amt.amount).replace(',', '&#8239;')) # Narrow no-break space
@@ -220,7 +220,7 @@ def debug_imbalances():
 	if cash:
 		l = accounting.ledger_to_cash(l, report_currency)
 	
-	transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and abs(sum((p.amount for p in t.postings), Balance()).exchange(report_currency, True).amount) > 0.005]
+	transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and not sum((p.amount for p in t.postings), Balance()).exchange(report_currency, True).near_zero]
 	
 	total_dr = sum((p.amount for t in transactions for p in t.postings if p.amount > 0), Balance()).exchange(report_currency, True)
 	total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_currency, True)

@@ -220,6 +220,12 @@ class Amount:
 			return Amount(self.amount * price.amount, currency)
 		
 		raise TypeError('Cannot exchange {} to {}'.format(self.currency, currency))
+	
+	@property
+	def near_zero(self):
+		if abs(self.amount) < 0.005:
+			return True
+		return False
 
 class Balance:
 	def __init__(self, amounts=None):
