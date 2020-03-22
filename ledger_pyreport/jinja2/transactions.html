@@ -61,7 +61,7 @@
 		{% endif %}
 		
 		{% for transaction in transactions %}
-			{% for posting in transaction.postings if (posting.amount.amount >= 0.05 or posting.amount.amount < -0.05) and posting.account != account %}
+			{% for posting in transaction.postings if posting.account != account %}
 				{% set amount = posting.exchange(report_currency, transaction.date) %}
 				<tr>
 					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
