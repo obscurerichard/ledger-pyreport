@@ -189,8 +189,8 @@ def transactions_commodity():
 	account = l.get_account(account)
 	transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
 	
-	opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account)
-	closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account)
+	opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account).clean()
+	closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).clean()
 	
 	def matching_posting(transaction, amount):
 		return next((p for p in transaction.postings if p.account == account and p.amount.currency == amount.currency), None)

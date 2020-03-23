@@ -31,7 +31,7 @@
 			<th>Description</th>
 			<th class="h1" style="width: 1em;"></th>
 			<th class="h1" style="text-align: right; width: 5em;">Amount</th>
-			<th class="h1" style="width: 4em;"></th>
+			{#<th class="h1" style="width: 4em;"></th>#}
 			<th class="h1" style="text-align: right; width: 5em;">Balance</th>
 			<th class="h1" style="width: 4em;"></th>
 			<th class="h1" style="width: 1em;"></th>
@@ -43,11 +43,11 @@
 			<tr class="total">
 				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
 				<td>{% if loop.first %}<a href="{{ prevlink }}">Opening Balance</a>{% endif %}</td>
-				<td style="text-align: right;"></td>
 				<td></td>
+				{#<td></td>#}
 				<td></td>
-				<td style="text-align: right;"><a href="{{ prevlink }}">{{ amount|abs|bc }}</a></td>
-				<td><a href="{{ prevlink }}">{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</a></td>
+				<td style="text-align: right;"><a href="{{ prevlink }}"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></a></td>
+				<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% endfor %}
@@ -64,13 +64,13 @@
 					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
 					{% if posting %}
 						<td>{% if posting.amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
-						<td style="text-align: right;">{{ posting.amount|abs|bc }}</td>
-						<td>{% if posting.amount.currency.price %}{{ '{' + posting.amount.currency.price|bc + '}' }}{% endif %}</td>
+						<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ posting.amount|abs|bc }}</span></td>
+						{#<td>{% if posting.amount.currency.price %}{{ '{' + posting.amount.currency.price|bc + '}' }}{% endif %}</td>#}
 					{% else %}
-						<td colspan="3"></td>
+						<td colspan="2"></td>
 					{% endif %}
-					<td style="text-align: right;">{{ amount|abs|bc }}</td>
-					<td>{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</td>
+					<td style="text-align: right;"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></td>
+					<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
 					<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 				</tr>
 			{% endfor %}
@@ -81,11 +81,11 @@
 			<tr class="total explicit-rules" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
 				<td>{% if loop.first %}{{ date.strftime('%Y-%m-%d') }}{% endif %}</td>
 				<td>{% if loop.first %}Closing Balance{% endif %}</td>
-				<td style="text-align: right;"></td>
 				<td></td>
+				{#<td></td>#}
 				<td></td>
-				<td style="text-align: right;">{{ amount|abs|bc }}</td>
-				<td>{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</td>
+				<td style="text-align: right;"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></td>
+				<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% endfor %}

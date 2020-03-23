@@ -150,10 +150,10 @@ class Amount:
 		if self.currency.is_prefix:
 			amount_str = ('{}{:.2f}' if round else '{}{}').format(self.currency.name, self.amount)
 		else:
-			amount_str = ('{:.2f} {}' if round else '{:.2f} {}').format(self.amount, self.currency.name)
+			amount_str = ('{:.2f} {}' if round else '{} {}').format(self.amount, self.currency.name)
 		
 		if self.currency.price:
-			return '{} {{{}}}'.format(amount_str, self.currency.price)
+			return '{} {{{}}}'.format(amount_str, self.currency.price.tostr(round))
 		return amount_str
 	
 	def __repr__(self):
