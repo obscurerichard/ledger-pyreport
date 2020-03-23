@@ -1,0 +1,93 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+{% extends 'base_report.html' %}
+
+{% block title %}Account Transactions as at {{ date.strftime('%d %B %Y') }}{% endblock %}
+
+{% block report %}
+	<h1>Account Transactions</h1>
+	<h2 style="margin-bottom: 0;">For {{ account.name }}</h2>
+	<h2>For the {{ period }}</h2>
+	
+	<table class="ledger">
+		<tr>
+			<th style="width: 5em;">Date</th>
+			<th>Description</th>
+			<th class="h1" style="width: 1em;"></th>
+			<th class="h1" style="text-align: right; width: 5em;">Amount</th>
+			<th class="h1" style="width: 4em;"></th>
+			<th class="h1" style="text-align: right; width: 5em;">Balance</th>
+			<th class="h1" style="width: 4em;"></th>
+			<th class="h1" style="width: 1em;"></th>
+		</tr>
+		
+		{% set ns = namespace(balance=None) %}
+		{% set prevlink = '/transactions_commodity?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
+		{% for amount in opening_balance.amounts %}
+			<tr class="total">
+				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
+				<td>{% if loop.first %}<a href="{{ prevlink }}">Opening Balance</a>{% endif %}</td>
+				<td style="text-align: right;"></td>
+				<td></td>
+				<td></td>
+				<td style="text-align: right;"><a href="{{ prevlink }}">{{ amount|abs|bc }}</a></td>
+				<td><a href="{{ prevlink }}">{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</a></td>
+				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+			</tr>
+		{% endfor %}
+		{% set ns.balance = opening_balance %}
+		
+		{% for transaction in transactions %}
+			{% for posting in transaction.postings if posting.account == account %}
+				{% set ns.balance = ns.balance + posting.amount %}
+			{% endfor %}
+			{% for amount in ns.balance.amounts %}
+				{% set posting = matching_posting(transaction, amount) %}
+				<tr{% if loop.first %} style="border-top: 1px solid black;"{% endif %}>
+					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
+					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
+					{% if posting %}
+						<td>{% if posting.amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+						<td style="text-align: right;">{{ posting.amount|abs|bc }}</td>
+						<td>{% if posting.amount.currency.price %}{{ '{' + posting.amount.currency.price|bc + '}' }}{% endif %}</td>
+					{% else %}
+						<td colspan="3"></td>
+					{% endif %}
+					<td style="text-align: right;">{{ amount|abs|bc }}</td>
+					<td>{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</td>
+					<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+				</tr>
+			{% endfor %}
+			{% set ns.balance = ns.balance.clean() %}
+		{% endfor %}
+		
+		{% for amount in closing_balance.amounts %}
+			<tr class="total explicit-rules" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
+				<td>{% if loop.first %}{{ date.strftime('%Y-%m-%d') }}{% endif %}</td>
+				<td>{% if loop.first %}Closing Balance{% endif %}</td>
+				<td style="text-align: right;"></td>
+				<td></td>
+				<td></td>
+				<td style="text-align: right;">{{ amount|abs|bc }}</td>
+				<td>{% if amount.currency.price %}{{ '{' + amount.currency.price|bc + '}' }}{% endif %}</td>
+				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endblock %}

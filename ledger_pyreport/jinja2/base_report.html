@@ -19,7 +19,11 @@
 {% extends 'base.html' %}
 
 {% block body %}
-	<a class="homelink" href="/">Home</a>
+	<div class="nav-header">
+		{% block links %}
+			<a href="/">Home</a>
+		{% endblock %}
+	</div>
 	
 	{% block report %}
 	{% endblock %}

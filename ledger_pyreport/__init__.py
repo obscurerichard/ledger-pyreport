@@ -169,6 +169,34 @@ def transactions():
 		
 		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
 
+@app.route('/transactions_commodity')
+def transactions_commodity():
+	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
+	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	account = flask.request.args.get('account', None)
+	cash = flask.request.args.get('cash', False)
+	
+	report_currency = Currency(*config['report_currency'])
+	
+	# General ledger
+	l = ledger.raw_transactions_at_date(date)
+	if cash:
+		l = accounting.ledger_to_cash(l, report_currency)
+	
+	# Unrealized gains
+	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date, pstart), report_currency).ledger
+	
+	account = l.get_account(account)
+	transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
+	
+	opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account)
+	closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account)
+	
+	def matching_posting(transaction, amount):
+		return next((p for p in transaction.postings if p.account == account and p.amount.currency == amount.currency), None)
+	
+	return flask.render_template('transactions_commodity.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta, matching_posting=matching_posting)
+
 # Template filters
 
 @app.template_filter('a')
@@ -185,9 +213,12 @@ def filter_amount_positive(amt):
 	return flask.Markup('{:,.2f}'.format(amt.amount).replace(',', '&#8239;'))
 	#return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
 
-@app.template_filter('bb')
-def filter_balance_positive(balance):
-	return flask.Markup('<br>'.join(filter_amount_positive(a) for a in balance.amounts))
+@app.template_filter('bc')
+def filter_currency_positive(amt):
+	if amt.currency.is_prefix:
+		return flask.Markup('{}{:,.2f}'.format(amt.currency.name, amt.amount).replace(',', '&#8239;'))
+	else:
+		return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
 
 # Debug views
 

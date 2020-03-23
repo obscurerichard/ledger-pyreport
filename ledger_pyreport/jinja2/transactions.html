@@ -20,6 +20,11 @@
 
 {% block title %}{% if account %}Account Transactions{% else %}General Ledger{% endif %} as at {{ date.strftime('%d %B %Y') }}{% endblock %}
 
+{% block links %}
+	{{ super() }}
+	<a href="/transactions_commodity?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">Show commodity detail</a>
+{% endblock %}
+
 {% block report %}
 	{% if account %}
 		<h1>Account Transactions</h1>

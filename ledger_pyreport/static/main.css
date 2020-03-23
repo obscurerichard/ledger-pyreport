@@ -52,7 +52,8 @@ table.ledger th.h1 {
 
 table.ledger tr.total td {
 	font-weight: bold;
-	
+}
+table.ledger tr.total:not(.explicit-rules) td {
 	border-top: 1pt solid black;
 	border-bottom: 1pt solid black;
 }
@@ -72,11 +73,17 @@ table.ledger a:hover {
 	text-decoration: underline;
 }
 
-a.homelink {
+.nav-header {
 	color: #888;
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+.nav-header a {
+	color: #888;
+}
+.nav-header a:hover {
+	color: #666;
 }
 
 @media screen {

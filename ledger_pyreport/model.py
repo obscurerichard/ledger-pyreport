@@ -176,10 +176,21 @@ class Amount:
 	
 	def __neg__(self):
 		return Amount(-self.amount, self.currency)
+	def __abs__(self):
+		return Amount(abs(self.amount), self.currency)
 	
-	@compatible_currency
 	def __eq__(self, other):
-		return self.amount == other
+		if isinstance(other, Amount):
+			if self.amount == 0 and other.amount == 0:
+				return True
+			if other.currency != self.currency:
+				return False
+			return self.amount == other.amount
+		
+		if other == 0:
+			return self.amount == 0
+		
+		raise TypeError('Cannot compare Amount with non-zero number')
 	@compatible_currency
 	def __ne__(self, other):
 		return self.amount != other
@@ -237,6 +248,9 @@ class Balance:
 			new_amount = next((a for a in new_amounts if a.currency == amount.currency), None)
 		return Balance(new_amounts)
 	
+	def clean(self):
+		return Balance([a for a in self.amounts if a != 0])
+	
 	def exchange(self, currency, is_cost, date=None, ledger=None):
 		result = Amount(0, currency)
 		for amount in self.amounts:
@@ -269,18 +283,27 @@ class Balance:
 					new_amount = Amount(0, amount.currency)
 					new_amounts.append(new_amount)
 				new_amount.amount += amount.amount
+				
+				#if new_amount == 0:
+				#	new_amounts.remove(new_amount)
 		elif isinstance(other, Amount):
 			new_amount = next((a for a in new_amounts if a.currency == other.currency), None)
 			if new_amount is None:
 				new_amount = Amount(0, other.currency)
 				new_amounts.append(new_amount)
 			new_amount.amount += other.amount
+			
+			#if new_amount == 0:
+			#	new_amounts.remove(new_amount)
 		elif other == 0:
 			pass
 		else:
 			raise Exception('NYI')
 		
 		return Balance(new_amounts)
+	
+	def __sub__(self, other):
+		return self + (-other)
 
 class Currency:
 	def __init__(self, name, is_prefix, price=None):
