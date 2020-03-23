@@ -113,7 +113,7 @@ def account_to_cash(account, currency):
 				balancing_posting.transaction.postings.remove(balancing_posting)
 		
 		if amount_remaining != 0:
-			if account.is_asset:
+			if posting.account.is_asset:
 				# Cash - charge any unbalanced remainder to Other Income
 				posting.transaction.postings.append(Posting(posting.transaction, account.ledger.get_account(config['cash_other_income']), Amount(-amount_remaining, currency)))
 			else:
