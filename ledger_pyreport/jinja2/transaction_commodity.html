@@ -20,11 +20,6 @@
 
 {% block title %}{{ transaction.description }}{% endblock %}
 
-{% block links %}
-	{{ super() }}
-	<a href="/transaction?{{ {'tid': transaction.id, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>
-{% endblock %}
-
 {% block report %}
 	<h1 style="margin-bottom: 1em;">Transaction</h1>
 	
@@ -46,26 +41,20 @@
 			{#<th style="width: 5em;">Date</th>#}
 			<th>Description</th>
 			<th style="max-width: 8em;">Account</th>
-			<th style="text-align: right; width: 5em;">Dr</th>
-			<th style="text-align: right; width: 5em;">Cr</th>
+			<th style="width: 1em;"></th>
+			<th style="text-align: right; width: 5em;">Amount</th>
+			<th style="width: 4em;"></th>
 		</tr>
 		
 		{% for posting in transaction.postings %}
-			{% set amount = posting.exchange(report_currency, transaction.date) %}
 			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr>
 				<td>{{ posting.comment }}</td>
 				<td>{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</td>
-				<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
-				<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+				<td>{% if posting.amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+				<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ posting.amount|abs|bc }}</span></td>
+				<td>{% if posting.amount.currency.price %}<span title="{{ posting.amount.tostr(False) }}">{{ '{' + posting.amount.currency.price|bc + '}' }}</span>{% endif %}</td>
 			</tr>
 		{% endfor %}
-		
-		<tr class="total">
-			<td>Total</td>
-			<td></td>
-			<td style="text-align: right;">{{ total_dr|b }}</td>
-			<td style="text-align: right;">{{ -total_cr|b }}</td>
-		</tr>
 	</table>
 {% endblock %}

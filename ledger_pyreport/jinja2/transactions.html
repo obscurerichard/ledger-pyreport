@@ -22,7 +22,7 @@
 
 {% block links %}
 	{{ super() }}
-	{% if account %}<a href="/transactions_commodity?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">Show commodity detail</a>{% endif %}
+	{% if account %}<a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>{% endif %}
 {% endblock %}
 
 {% block report %}
@@ -39,9 +39,9 @@
 			<th style="width: 5em;">Date</th>
 			<th>Description</th>
 			<th style="max-width: 8em;">{% if account %}Related {% endif %}Account</th>
-			<th class="h1" style="text-align: right; width: 5em;">Dr</th>
-			<th class="h1" style="text-align: right; width: 5em;">Cr</th>
-			{% if account %}<th class="h1" style="text-align: right; width: 6em;">Balance</th>{% endif %}
+			<th style="text-align: right; width: 5em;">Dr</th>
+			<th style="text-align: right; width: 5em;">Cr</th>
+			{% if account %}<th style="text-align: right; width: 6em;">Balance</th>{% endif %}
 		</tr>
 		
 		{% set ns = namespace(balance=None) %}
