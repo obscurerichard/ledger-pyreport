@@ -36,6 +36,8 @@ def run_ledger(*args):
 	return stdout
 
 def run_ledger_date(date, *args):
+	if date is None:
+		return run_ledger(*args)
 	return run_ledger('--end', (date + timedelta(days=1)).strftime('%Y-%m-%d'), *args)
 
 # General financial logic
@@ -47,6 +49,8 @@ def financial_year(date):
 	return pstart
 
 # Ledger logic
+
+csv.register_dialect('ledger', doublequote=False, escapechar='\\')
 
 def parse_amount(amount):
 	if '{' in amount:
@@ -60,7 +64,7 @@ def parse_amount(amount):
 		# Currency follows number
 		bits = amount_str.split()
 		amount_num = Decimal(bits[0])
-		currency = Currency(bits[1], False)
+		currency = Currency(bits[1].strip('"'), False)
 	else:
 		# Currency precedes number
 		currency = Currency(amount_str[0], True)
@@ -76,9 +80,9 @@ def get_pricedb():
 	
 	prices = []
 	
-	reader = csv.reader(output.splitlines())
+	reader = csv.reader(output.splitlines(), dialect='ledger')
 	for date_str, currency, price_str in reader:
-		prices.append((datetime.strptime(date_str, '%Y-%m-%d'), currency, parse_amount(price_str)))
+		prices.append((datetime.strptime(date_str, '%Y-%m-%d'), currency.strip('"'), parse_amount(price_str)))
 	
 	return prices
 
@@ -86,18 +90,21 @@ def raw_transactions_at_date(date):
 	ledger = Ledger(date)
 	ledger.prices = get_pricedb()
 	
-	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount))\n')
+	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment))\n')
 	
-	reader = csv.reader(output.splitlines())
-	for trn_id, date_str, payee, account_str, amount_str in reader:
+	reader = csv.reader(output.splitlines(), dialect='ledger')
+	for trn_id, date_str, code, payee, account_str, amount_str, comment in reader:
 		if not ledger.transactions or trn_id != ledger.transactions[-1].id:
-			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee)
+			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code=code)
 			ledger.transactions.append(transaction)
 		else:
 			# Transaction ID matches: continuation of previous transaction
 			transaction = ledger.transactions[-1]
 		
-		posting = Posting(transaction, ledger.get_account(account_str), parse_amount(amount_str))
+		if ';' in comment:
+			comment = comment[comment.index(';')+1:].strip()
+		
+		posting = Posting(transaction, ledger.get_account(account_str), parse_amount(amount_str), comment=comment)
 		transaction.postings.append(posting)
 	
 	return ledger

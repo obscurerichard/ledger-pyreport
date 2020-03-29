@@ -197,6 +197,25 @@ def transactions_commodity():
 	
 	return flask.render_template('transactions_commodity.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta, matching_posting=matching_posting)
 
+@app.route('/transaction')
+def transaction():
+	tid = flask.request.args['tid']
+	cash = flask.request.args.get('cash', False)
+	
+	report_currency = Currency(*config['report_currency'])
+	
+	# General ledger
+	l = ledger.raw_transactions_at_date(None)
+	if cash:
+		l = accounting.ledger_to_cash(l, report_currency)
+	
+	transaction = next((t for t in l.transactions if str(t.id) == tid))
+	
+	total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).exchange(report_currency, True)
+	total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).exchange(report_currency, True)
+	
+	return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
+
 # Template filters
 
 @app.template_filter('a')

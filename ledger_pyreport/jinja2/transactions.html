@@ -38,7 +38,7 @@
 		<tr>
 			<th style="width: 5em;">Date</th>
 			<th>Description</th>
-			<th style="max-width: 8em;">Account</th>
+			<th style="max-width: 8em;">{% if account %}Related {% endif %}Account</th>
 			<th class="h1" style="text-align: right; width: 5em;">Dr</th>
 			<th class="h1" style="text-align: right; width: 5em;">Cr</th>
 			{% if account %}<th class="h1" style="text-align: right; width: 6em;">Balance</th>{% endif %}
@@ -69,9 +69,10 @@
 		{% for transaction in transactions %}
 			{% for posting in transaction.postings if posting.account != account %}
 				{% set amount = posting.exchange(report_currency, transaction.date) %}
+				{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 				<tr>
-					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
-					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
+					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
+					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
 					{% if account %}
 						{# Reverse Dr/Cr so it's from the "perspective" of this account #}

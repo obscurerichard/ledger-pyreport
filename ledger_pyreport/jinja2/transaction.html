@@ -1,0 +1,66 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+{% extends 'base_report.html' %}
+
+{% block title %}{{ transaction.description }}{% endblock %}
+
+{% block report %}
+	<h1 style="margin-bottom: 1em;">Transaction</h1>
+	
+	<table class="ledger" style="margin-bottom: 1em;">
+		<tr>
+			<th style="width: 5em;">Date</th>
+			<th style="width: 5em;">Code</th>
+			<th>Description</th>
+		</tr>
+		<tr>
+			<td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+			<td>{{ transaction.code }}</td>
+			<td>{{ transaction.description }}</td>
+		</tr>
+	</table>
+	
+	<table class="ledger">
+		<tr>
+			{#<th style="width: 5em;">Date</th>#}
+			<th>Description</th>
+			<th style="max-width: 8em;">Account</th>
+			<th class="h1" style="text-align: right; width: 5em;">Dr</th>
+			<th class="h1" style="text-align: right; width: 5em;">Cr</th>
+		</tr>
+		
+		{% for posting in transaction.postings %}
+			{% set amount = posting.exchange(report_currency, transaction.date) %}
+			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
+			<tr>
+				<td>{{ posting.comment }}</td>
+				<td>{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</td>
+				<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+				<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+			</tr>
+		{% endfor %}
+		
+		<tr class="total">
+			<td>Total</td>
+			<td></td>
+			<td style="text-align: right;">{{ total_dr|b }}</td>
+			<td style="text-align: right;">{{ -total_cr|b }}</td>
+		</tr>
+	</table>
+{% endblock %}

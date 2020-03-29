@@ -54,14 +54,15 @@
 		{% set ns.balance = opening_balance %}
 		
 		{% for transaction in transactions %}
+			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 			{% for posting in transaction.postings if posting.account == account %}
 				{% set ns.balance = ns.balance + posting.amount %}
 			{% endfor %}
 			{% for amount in ns.balance.amounts %}
 				{% set posting = matching_posting(transaction, amount) %}
 				<tr{% if loop.first %} style="border-top: 1px solid black;"{% endif %}>
-					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
-					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>
+					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
+					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					{% if posting %}
 						<td>{% if posting.amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 						<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ posting.amount|abs|bc }}</span></td>

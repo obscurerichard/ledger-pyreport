@@ -52,11 +52,13 @@ class Ledger:
 		return max(prices, key=lambda p: p[0])[2]
 
 class Transaction:
-	def __init__(self, ledger, id, date, description):
+	def __init__(self, ledger, id, date, description, code=None):
 		self.ledger = ledger
 		self.id = id
 		self.date = date
 		self.description = description
+		self.code = code
+		
 		self.postings = []
 	
 	def __repr__(self):
@@ -69,10 +71,11 @@ class Transaction:
 		return '\n'.join(result)
 
 class Posting:
-	def __init__(self, transaction, account, amount):
+	def __init__(self, transaction, account, amount, comment=None):
 		self.transaction = transaction
 		self.account = account
 		self.amount = Amount(amount)
+		self.comment = comment
 	
 	def __repr__(self):
 		return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
