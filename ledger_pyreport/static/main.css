@@ -93,7 +93,7 @@ table.ledger a:hover {
 }
 
 @media print {
-	a.homelink {
+	.nav-header {
 		display: none;
 	}
 }
