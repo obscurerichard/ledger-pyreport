@@ -231,7 +231,7 @@ def filter_amount(amt, link=None):
 			return flask.Markup('<a href="{}"><span title="{}">({})</span></a>'.format(link, amt.tostr(False), amt_str))
 	else:
 		if is_pos:
-			return flask.Markup('<span title="{}">&nbsp;'.format(amt.tostr(False), amt_str))
+			return flask.Markup('<span title="{}">{}</span>&nbsp;'.format(amt.tostr(False), amt_str))
 		else:
 			return flask.Markup('<span title="{}">({})</span>'.format(amt.tostr(False), amt_str))
 
