@@ -41,10 +41,12 @@
 			{#<th style="width: 5em;">Date</th>#}
 			<th>Description</th>
 			<th style="max-width: 8em;">Account</th>
-			<th style="text-align: right; width: 5em;">Dr</th>
-			<th style="width: 4em;"></th>
-			<th style="text-align: right; width: 5em;">Cr</th>
-			<th style="width: 4em;"></th>
+			<th style="text-align: right; width: 4em;">Dr</th> {# Amount #}
+			<th style="width: 2em;"></th> {# Currency #}
+			<th style="width: 2em;"></th> {# Price #}
+			<th style="text-align: right; width: 4em;">Cr</th>
+			<th style="width: 2em;"></th>
+			<th style="width: 2em;"></th>
 		</tr>
 		
 		{% for posting in transaction.postings %}
@@ -53,15 +55,11 @@
 				<td>{{ posting.comment }}</td>
 				<td>{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</td>
 				{% if posting.amount >= 0 %}
-					<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ posting.amount|abs|bc }}</span></td>
-					<td>{% if posting.amount.currency.price %}<span title="{{ posting.amount.tostr(False) }}">{{ '{' + posting.amount.currency.price|bc + '}' }}</span>{% endif %}</td>
-					<td></td>
-					<td></td>
+					{{ posting.amount|bt(True) }}
+					<td colspan="3"></td>
 				{% else %}
-					<td></td>
-					<td></td>
-					<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ -posting.amount|abs|bc }}</span></td>
-					<td>{% if posting.amount.currency.price %}<span title="{{ posting.amount.tostr(False) }}">{{ '{' + posting.amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+					<td colspan="3"></td>
+					{{ -posting.amount|bt(True) }}
 				{% endif %}
 			</tr>
 		{% endfor %}
@@ -71,18 +69,14 @@
 				<td>{% if loop.first %}Total{% endif %}</td>
 				<td></td>
 				{% if dr_amount %}
-					<td style="text-align: right;"><span title="{{ dr_amount.tostr(False) }}">{{ dr_amount|abs|bc }}</span></td>
-					<td>{% if dr_amount.currency.price %}<span title="{{ dr_amount.tostr(False) }}">{{ '{' + dr_amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+					{{ dr_amount|bt(True) }}
 				{% else %}
-					<td></td>
-					<td></td>
+					<td colspan="3"></td>
 				{% endif %}
 				{% if cr_amount %}
-					<td style="text-align: right;"><span title="{{ cr_amount.tostr(False) }}">{{ -cr_amount|abs|bc }}</span></td>
-					<td>{% if cr_amount.currency.price %}<span title="{{ cr_amount.tostr(False) }}">{{ '{' + cr_amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+					{{ -cr_amount|bt(True) }}
 				{% else %}
-					<td></td>
-					<td></td>
+					<td colspan="3"></td>
 				{% endif %}
 			</tr>
 		{% endfor %}
@@ -90,10 +84,8 @@
 		<tr class="total">
 			<td></td>
 			<td></td>
-			<td style="text-align: right;"><span title="{{ total_dr.tostr(False) }}">{{ total_dr|abs|bc }}</span></td>
-			<td></td>
-			<td style="text-align: right;"><span title="{{ total_cr.tostr(False) }}">{{ -total_cr|abs|bc }}</span></td>
-			<td></td>
+			{{ total_dr|bt(True) }}
+			{{ -total_cr|bt(True) }}
 		</tr>
 	</table>
 {% endblock %}

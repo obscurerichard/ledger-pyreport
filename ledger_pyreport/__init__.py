@@ -233,6 +233,29 @@ def filter_currency_positive(amt):
 	else:
 		return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
 
+@app.template_filter('bt')
+def filter_currency_table_positive(amt, show_price, link=None):
+	result = []
+	if amt.currency.is_prefix:
+		amt_str = filter_currency_positive(amt)
+		cur_str = ''
+	else:
+		amt_str = '{:,.2f}'.format(amt.amount).replace(',', '&#8239;')
+		cur_str = amt.currency.name
+	
+	amt_full = amt.tostr(False)
+	
+	result.append('<td style="text-align: right;"><a href="{}"><span title="{}">{}</span></a></td>'.format(link, amt_full, amt_str) if link else '<td style="text-align: right;"><span title="{}">{}</span></td>'.format(amt_full, amt_str))
+	result.append('<td><span title="{}">{}</span></td>'.format(amt_full, cur_str))
+	
+	if show_price:
+		if amt.currency.price:
+			result.append('<td><span title="{}">{{{}}}</span></td>'.format(amt_full, filter_currency_positive(amt.currency.price)))
+		else:
+			result.append('<td></td>')
+	
+	return flask.Markup(''.join(result))
+
 # Debug views
 
 @app.route('/debug/noncash_transactions')

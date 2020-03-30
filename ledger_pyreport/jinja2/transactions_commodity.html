@@ -29,25 +29,25 @@
 		<tr>
 			<th style="width: 5em;">Date</th>
 			<th>Description</th>
-			<th style="width: 1em;"></th>
-			<th style="text-align: right; width: 5em;">Amount</th>
-			{#<th style="width: 4em;"></th>#}
-			<th style="text-align: right; width: 5em;">Balance</th>
-			<th style="width: 4em;"></th>
+			<th style="width: 1em;"></th> {# Dr/Cr #}
+			<th style="text-align: right; width: 4em;">Amount</th>
+			<th style="width: 2em;"></th> {# Currency #}
+			<th style="text-align: right; width: 4em;">Balance</th>
+			<th style="width: 2em;"></th> {# Currency #}
+			<th style="width: 2em;"></th> {# Price #}
 			<th style="width: 1em;"></th>
 		</tr>
 		
 		{% set ns = namespace(balance=None) %}
-		{% set prevlink = '/transactions_commodity?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
+		{% set prevlink = '/transactions?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode %}
 		{% for amount in opening_balance.amounts %}
 			<tr class="total">
 				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
 				<td>{% if loop.first %}<a href="{{ prevlink }}">Opening Balance</a>{% endif %}</td>
 				<td></td>
-				{#<td></td>#}
 				<td></td>
-				<td style="text-align: right;"><a href="{{ prevlink }}"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></a></td>
-				<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+				<td></td>
+				{{ amount|bt(True, prevlink) }}
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% else %}
@@ -56,7 +56,9 @@
 				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
 				<td></td>
+				<td></td>
 				<td style="text-align: right;"><a href="{{ prevlink }}">0.00</a></td>
+				<td></td>
 				<td></td>
 				<td>Dr</td>
 			</tr>
@@ -75,13 +77,11 @@
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					{% if posting %}
 						<td>{% if posting.amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
-						<td style="text-align: right;"><span title="{{ posting.amount.tostr(False) }}">{{ posting.amount|abs|bc }}</span></td>
-						{#<td>{% if posting.amount.currency.price %}{{ '{' + posting.amount.currency.price|bc + '}' }}{% endif %}</td>#}
+						{{ posting.amount|abs|bt(False) }}
 					{% else %}
-						<td colspan="2"></td>
+						<td colspan="3"></td>
 					{% endif %}
-					<td style="text-align: right;"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></td>
-					<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+					{{ amount|abs|bt(True) }}
 					<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 				</tr>
 			{% endfor %}
@@ -93,10 +93,9 @@
 				<td>{% if loop.first %}{{ date.strftime('%Y-%m-%d') }}{% endif %}</td>
 				<td>{% if loop.first %}Closing Balance{% endif %}</td>
 				<td></td>
-				{#<td></td>#}
 				<td></td>
-				<td style="text-align: right;"><span title="{{ amount.tostr(False) }}">{{ amount|abs|bc }}</span></td>
-				<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
+				<td></td>
+				{{ amount|bt(True) }}
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% endfor %}
@@ -106,9 +105,9 @@
 			<td></td>
 			<td></td>
 			<td></td>
-			{% set closing_balance = closing_balance.exchange(report_currency, True) %}
-			<td style="text-align: right;"><span title="{{ closing_balance.tostr(False) }}">{{ closing_balance|abs|bc }}</span></td>
 			<td></td>
+			{% set closing_balance = closing_balance.exchange(report_currency, True) %}
+			{{ closing_balance|bt(True) }}
 			<td>{% if closing_balance >= 0 %}Dr{% else %}Cr{% endif %}</td>
 		</tr>
 	</table>
