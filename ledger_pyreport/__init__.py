@@ -22,6 +22,7 @@ from .model import *
 from datetime import datetime, timedelta
 from decimal import Decimal
 import flask
+import itertools
 
 app = flask.Flask(__name__, template_folder='jinja2')
 
@@ -199,12 +200,14 @@ def transaction():
 	
 	transaction = next((t for t in l.transactions if str(t.id) == tid))
 	
-	total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).exchange(report_currency, True)
-	total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).exchange(report_currency, True)
-	
 	if commodity:
-		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
+		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).clean()
+		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).clean()
+		totals = itertools.zip_longest(total_dr.amounts, total_cr.amounts)
+		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, totals=totals, total_dr=total_dr.exchange(report_currency, True), total_cr=total_cr.exchange(report_currency, True), report_currency=report_currency, cash=cash)
 	else:
+		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).exchange(report_currency, True)
+		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).exchange(report_currency, True)
 		return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
 
 # Template filters
