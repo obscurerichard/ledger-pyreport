@@ -50,6 +50,16 @@
 				<td>{% if amount.currency.price %}<span title="{{ amount.tostr(False) }}">{{ '{' + amount.currency.price|bc + '}' }}</span>{% endif %}</td>
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
+		{% else %}
+			<tr class="total">
+				<td><a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a></td>
+				<td><a href="{{ prevlink }}">Opening Balance</a></td>
+				<td></td>
+				<td></td>
+				<td style="text-align: right;"><a href="{{ prevlink }}">0.00</a></td>
+				<td></td>
+				<td>Dr</td>
+			</tr>
 		{% endfor %}
 		{% set ns.balance = opening_balance %}
 		
