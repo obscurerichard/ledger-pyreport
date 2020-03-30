@@ -90,5 +90,16 @@
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% endfor %}
+		
+		<tr class="total">
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			{% set closing_balance = closing_balance.exchange(report_currency, True) %}
+			<td style="text-align: right;"><span title="{{ closing_balance.tostr(False) }}">{{ closing_balance|abs|bc }}</span></td>
+			<td></td>
+			<td>{% if closing_balance >= 0 %}Dr{% else %}Cr{% endif %}</td>
+		</tr>
 	</table>
 {% endblock %}
