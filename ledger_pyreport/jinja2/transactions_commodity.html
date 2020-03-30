@@ -27,15 +27,15 @@
 	
 	<table class="ledger">
 		<tr>
-			<th style="width: 5em;">Date</th>
-			<th>Description</th>
-			<th style="width: 1em;"></th> {# Dr/Cr #}
-			<th style="text-align: right; width: 4em;">Amount</th>
-			<th style="width: 2em;"></th> {# Currency #}
-			<th style="text-align: right; width: 4em;">Balance</th>
-			<th style="width: 2em;"></th> {# Currency #}
-			<th style="width: 2em;"></th> {# Price #}
-			<th style="width: 1em;"></th>
+			<th style="min-width: 5em;">Date</th>
+			<th style="width: 100%;">Description</th>
+			<th style="min-width: 1em;"></th> {# Dr/Cr #}
+			<th style="text-align: right; min-width: 4em;">Amount</th>
+			<th style="min-width: 2em;"></th> {# Currency #}
+			<th style="text-align: right; min-width: 4em;">Balance</th>
+			<th style="min-width: 2em;"></th> {# Currency #}
+			<th style="min-width: 2em;"></th> {# Price #}
+			<th style="min-width: 1em;"></th>
 		</tr>
 		
 		{% set ns = namespace(balance=None) %}

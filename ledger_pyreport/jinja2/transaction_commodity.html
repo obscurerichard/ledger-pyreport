@@ -39,14 +39,14 @@
 	<table class="ledger">
 		<tr>
 			{#<th style="width: 5em;">Date</th>#}
-			<th>Description</th>
-			<th style="max-width: 8em;">Account</th>
-			<th style="text-align: right; width: 4em;">Dr</th> {# Amount #}
-			<th style="width: 2em;"></th> {# Currency #}
-			<th style="width: 2em;"></th> {# Price #}
-			<th style="text-align: right; width: 4em;">Cr</th>
-			<th style="width: 2em;"></th>
-			<th style="width: 2em;"></th>
+			<th style="width: 50%;">Description</th>
+			<th style="width: 50%;">Account</th>
+			<th style="text-align: right; min-width: 4em;">Dr</th> {# Amount #}
+			<th style="min-width: 2em;"></th> {# Currency #}
+			<th style="min-width: 2em;"></th> {# Price #}
+			<th style="text-align: right; min-width: 4em;">Cr</th>
+			<th style="min-width: 2em;"></th>
+			<th style="min-width: 2em;"></th>
 		</tr>
 		
 		{% for posting in transaction.postings %}

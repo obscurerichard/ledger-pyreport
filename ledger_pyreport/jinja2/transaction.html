@@ -44,10 +44,10 @@
 	<table class="ledger">
 		<tr>
 			{#<th style="width: 5em;">Date</th>#}
-			<th>Description</th>
-			<th style="max-width: 8em;">Account</th>
-			<th style="text-align: right; width: 5em;">Dr</th>
-			<th style="text-align: right; width: 5em;">Cr</th>
+			<th style="width: 50%;">Description</th>
+			<th style="width: 50%;">Account</th>
+			<th style="text-align: right; min-width: 5em;">Dr</th>
+			<th style="text-align: right; min-width: 5em;">Cr</th>
 		</tr>
 		
 		{% for posting in transaction.postings %}

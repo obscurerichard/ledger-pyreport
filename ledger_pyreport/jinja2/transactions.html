@@ -36,12 +36,12 @@
 	
 	<table class="ledger">
 		<tr>
-			<th style="width: 5em;">Date</th>
-			<th>Description</th>
-			<th style="max-width: 8em;">{% if account %}Related {% endif %}Account</th>
-			<th style="text-align: right; width: 5em;">Dr</th>
-			<th style="text-align: right; width: 5em;">Cr</th>
-			{% if account %}<th style="text-align: right; width: 6em;">Balance</th>{% endif %}
+			<th style="min-width: 5em;">Date</th>
+			<th style="width: 50%;">Description</th>
+			<th style="width: 50%;">{% if account %}Related {% endif %}Account</th>
+			<th style="text-align: right; min-width: 5em;">Dr</th>
+			<th style="text-align: right; min-width: 5em;">Cr</th>
+			{% if account %}<th style="text-align: right; min-width: 6em;">Balance</th>{% endif %}
 		</tr>
 		
 		{% set ns = namespace(balance=None) %}
