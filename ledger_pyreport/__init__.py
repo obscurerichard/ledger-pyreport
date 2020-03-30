@@ -168,7 +168,7 @@ def transactions():
 		account = l.get_account(account)
 		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account).clean()
+		opening_balance = accounting.trial_balance(l, pstart - timedelta(days=1), pstart).get_balance(account).clean()
 		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).clean()
 		
 		def matching_posting(transaction, amount):
@@ -180,7 +180,7 @@ def transactions():
 		account = l.get_account(account)
 		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, pstart, pstart).get_balance(account).exchange(report_currency, True)
+		opening_balance = accounting.trial_balance(l, pstart - timedelta(days=1), pstart).get_balance(account).exchange(report_currency, True)
 		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).exchange(report_currency, True)
 		
 		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
