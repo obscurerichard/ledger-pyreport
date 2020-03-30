@@ -14,7 +14,8 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import yaml
 
-with open('config.yml', 'r') as f:
+with open(os.getenv('LEDGER_PYREPORT_CONFIG', 'config.yml'), 'r') as f:
 	config = yaml.safe_load(f)
