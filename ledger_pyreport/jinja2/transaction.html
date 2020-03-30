@@ -56,8 +56,8 @@
 			<tr>
 				<td>{{ posting.comment }}</td>
 				<td>{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</td>
-				<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
-				<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+				<td style="text-align: right;">{% if amount > 0 %}{{ amount|b }}{% endif %}</td>
+				<td style="text-align: right;">{% if amount < 0 %}{{ -amount|b }}{% endif %}</td>
 			</tr>
 		{% endfor %}
 		

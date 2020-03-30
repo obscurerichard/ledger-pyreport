@@ -77,8 +77,8 @@
 					{% if account %}
 						{# Reverse Dr/Cr so it's from the "perspective" of this account #}
 						{% set ns.balance = ns.balance - amount %}
-						<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
-						<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
+						<td style="text-align: right;">{% if amount < 0 %}{{ -amount|b }}{% endif %}</td>
+						<td style="text-align: right;">{% if amount > 0 %}{{ amount|b }}{% endif %}</td>
 						<td style="text-align: right;">
 							{% if loop.last %}
 								{% if ns.balance >= 0 %}
@@ -89,8 +89,8 @@
 							{% endif %}
 						</td>
 					{% else %}
-						<td style="text-align: right;">{% if amount > 0 %}<span title="{{ posting.amount.tostr(False) }}">{{ amount|b }}</span>{% endif %}</td>
-						<td style="text-align: right;">{% if amount < 0 %}<span title="{{ (-posting.amount).tostr(False) }}">{{ -amount|b }}</span>{% endif %}</td>
+						<td style="text-align: right;">{% if amount > 0 %}{{ amount|b }}{% endif %}</td>
+						<td style="text-align: right;">{% if amount < 0 %}{{ -amount|b }}{% endif %}</td>
 					{% endif %}
 				</tr>
 			{% endfor %}

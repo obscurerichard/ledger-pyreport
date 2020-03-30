@@ -29,7 +29,7 @@
 		</td>
 		{% for pandl in pandls %}
 			{% set amount = (-pandl.get_balance(account) if invert else pandl.get_balance(account)).exchange(report_currency, True) %}
-			<td>{% if not amount.near_zero %}<a href="/transactions?{{ {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ amount|a }}</a>{% endif %}</td>
+			<td>{% if not amount.near_zero %}{{ amount|a('/transactions?' + {'date': pandl.date.strftime('%Y-%m-%d'), 'pstart': pandl.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode) }}{% endif %}</td>
 		{% endfor %}
 	</tr>
 	

@@ -38,12 +38,11 @@
 			<td>
 				{% if not amount.near_zero %}
 					{% if account.name == config['current_year_earnings'] %}
-						<a href="/pandl?{{ {'date_end': balance_sheet.date.strftime('%Y-%m-%d'), 'date_beg': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'compare': '0', 'cash': 'on' if cash else ''}|urlencode }}">
+						{{ amount|a('/pandl?' + {'date_end': balance_sheet.date.strftime('%Y-%m-%d'), 'date_beg': balance_sheets[0].pstart.strftime('%Y-%m-%d'), 'compare': '0', 'cash': 'on' if cash else ''}|urlencode) }}
 					{% else %}
-						<a href="/transactions?{{ {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">
+						{{ amount|a('/transactions?' + {'date': balance_sheet.date.strftime('%Y-%m-%d'), 'pstart': balance_sheet.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode) }}
 					{% endif %}
-						{{ amount|a }}
-					</a>
+						
 				{% endif %}
 			</td>
 		{% endfor %}

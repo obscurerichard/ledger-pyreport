@@ -213,25 +213,38 @@ def transaction():
 # Template filters
 
 @app.template_filter('a')
-def filter_amount(amt):
+def filter_amount(amt, link=None):
 	if amt.near_zero:
-		return flask.Markup('0.00&nbsp;')
-	elif amt > 0:
-		return flask.Markup('{:,.2f}&nbsp;'.format(amt.amount).replace(',', '&#8239;')) # Narrow no-break space
+		amt_str = '0.00'
+		is_pos = True
+	elif amt >= 0:
+		amt_str = '{:,.2f}'.format(amt.amount).replace(',', '&#8239;') # Narrow no-break space
+		is_pos = True
 	else:
-		return flask.Markup('({:,.2f})'.format(-amt.amount).replace(',', '&#8239;'))
+		amt_str = '{:,.2f}'.format(-amt.amount).replace(',', '&#8239;')
+		is_pos = False
+	
+	if link:
+		if is_pos:
+			return flask.Markup('<a href="{}"><span title="{}">{}</span></a>&nbsp;'.format(link, amt.tostr(False), amt_str))
+		else:
+			return flask.Markup('<a href="{}"><span title="{}">({})</span></a>'.format(link, amt.tostr(False), amt_str))
+	else:
+		if is_pos:
+			return flask.Markup('<span title="{}">&nbsp;'.format(amt.tostr(False), amt_str))
+		else:
+			return flask.Markup('<span title="{}">({})</span>'.format(amt.tostr(False), amt_str))
 
 @app.template_filter('b')
 def filter_amount_positive(amt):
-	return flask.Markup('{:,.2f}'.format(amt.amount).replace(',', '&#8239;'))
-	#return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
+	return flask.Markup('<span title="{}">{:,.2f}</span>'.format(amt.tostr(False), amt.amount).replace(',', '&#8239;'))
 
 @app.template_filter('bc')
 def filter_currency_positive(amt):
 	if amt.currency.is_prefix:
-		return flask.Markup('{}{:,.2f}'.format(amt.currency.name, amt.amount).replace(',', '&#8239;'))
+		return flask.Markup('<span title="{}">{}{:,.2f}</span>'.format(amt.tostr(False), amt.currency.name, amt.amount).replace(',', '&#8239;'))
 	else:
-		return flask.Markup('{:,.2f} {}'.format(amt.amount, amt.currency.name).replace(',', '&#8239;'))
+		return flask.Markup('<span title="{}">{:,.2f} {}</span>'.format(amt.tostr(False), amt.amount, amt.currency.name).replace(',', '&#8239;'))
 
 @app.template_filter('bt')
 def filter_currency_table_positive(amt, show_price, link=None):
