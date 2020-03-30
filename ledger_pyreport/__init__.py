@@ -76,7 +76,7 @@ def trial():
 		# Delete accounts with always zero balances
 		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
 		for account in accounts[:]:
-			if all(t.get_balance(account) == 0 for t in trial_balances):
+			if all(t.get_balance(account).exchange(report_currency, True).near_zero for t in trial_balances):
 				accounts.remove(account)
 		
 		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=accounts, report_currency=report_currency, cash=cash)
