@@ -1,0 +1,36 @@
+2019-06-30 Conversion balances
+    Assets:Current:Cash at Bank             $1000.00
+    Assets:Current:Cash on Hand               $50.00
+    Assets:Non-current:Plant                $5000.00
+    Equity:Retained Earnings
+
+2019-07-01 Loan
+    Assets:Current:Cash at Bank              $500.00
+    Liabilities:Non-current:Personal Loan
+
+2019-07-02 Application
+    Assets:Current:International Account      100.00 EUR @ $1.10
+    Assets:Current:Cash at Bank
+
+2019-08-01 Interest on personal loan
+    Expenses:Interest                        $100.00
+    Liabilities:Non-current:Personal Loan
+
+2019-08-02 Application
+    Assets:Current:International Account      100.00 EUR @ $1.05
+    Assets:Current:Cash at Bank
+
+2019-09-01 Paycheck
+    Assets:Current:Cash at Bank              $200.00
+    Income:Wages
+
+2019-09-02 Redemption
+    Assets:Current:Cash at Bank               $57.50
+    Assets:Current:International Account      -50.00 EUR {$1.10} @ $1.15
+    Income:Capital Gains
+
+2019-10-01 Depreciation
+    Expenses:Depreciation                    $500.00
+    Assets:Non-current:Plant:Less Accumulated Depreciation
+
+P 2019-10-01 00:00:00 EUR $1.30
