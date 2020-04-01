@@ -29,6 +29,14 @@ class Ledger:
 		
 		self.prices = []
 	
+	def clone(self):
+		result = Ledger(self.date)
+		result.root_account = self.root_account
+		result.accounts = self.accounts
+		result.transactions = self.transactions[:]
+		result.prices = self.prices
+		return result
+	
 	def get_account(self, name):
 		if name == '':
 			return self.root_account
