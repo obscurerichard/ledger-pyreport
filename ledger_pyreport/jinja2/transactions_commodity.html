@@ -18,7 +18,7 @@
 
 {% extends 'base_report.html' %}
 
-{% block title %}Account Transactions as at {{ date.strftime('%d %B %Y') }}{% endblock %}
+{% block title %}Account Transactions for the {{ period }}{% endblock %}
 
 {% block report %}
 	<h1>Account Transactions</h1>
@@ -39,10 +39,10 @@
 		</tr>
 		
 		{% set ns = namespace(balance=None) %}
-		{% set prevlink = '/transactions?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode %}
+		{% set prevlink = '/transactions?' + {'date_end': (date_beg - timedelta(days=1)).strftime('%Y-%m-%d'), 'date_beg': date_beg.replace(year=date_beg.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode %}
 		{% for amount in opening_balance.amounts %}
 			<tr class="total">
-				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
+				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
 				<td>{% if loop.first %}<a href="{{ prevlink }}">Opening Balance</a>{% endif %}</td>
 				<td></td>
 				<td></td>
@@ -52,7 +52,7 @@
 			</tr>
 		{% else %}
 			<tr class="total">
-				<td><a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a></td>
+				<td><a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a></td>
 				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
 				<td></td>
@@ -90,7 +90,7 @@
 		
 		{% for amount in closing_balance.amounts %}
 			<tr class="total explicit-rules" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
-				<td>{% if loop.first %}{{ date.strftime('%Y-%m-%d') }}{% endif %}</td>
+				<td>{% if loop.first %}{{ date_end.strftime('%Y-%m-%d') }}{% endif %}</td>
 				<td>{% if loop.first %}Closing Balance{% endif %}</td>
 				<td></td>
 				<td></td>

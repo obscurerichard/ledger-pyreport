@@ -18,11 +18,11 @@
 
 {% extends 'base_report.html' %}
 
-{% block title %}{% if account %}Account Transactions{% else %}General Ledger{% endif %} as at {{ date.strftime('%d %B %Y') }}{% endblock %}
+{% block title %}{% if account %}Account Transactions{% else %}General Ledger{% endif %} for the {{ period }}{% endblock %}
 
 {% block links %}
 	{{ super() }}
-	{% if account %}<a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>{% endif %}
+	{% if account %}<a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>{% endif %}
 {% endblock %}
 
 {% block report %}
@@ -46,9 +46,9 @@
 		
 		{% set ns = namespace(balance=None) %}
 		{% if account %}
-			{% set prevlink = '/transactions?' + {'date': (pstart - timedelta(days=1)).strftime('%Y-%m-%d'), 'pstart': pstart.replace(year=pstart.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
+			{% set prevlink = '/transactions?' + {'date_end': (date_beg - timedelta(days=1)).strftime('%Y-%m-%d'), 'date_beg': date_beg.replace(year=date_beg.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr class="total">
-				<td><a href="{{ prevlink }}">{{ pstart.strftime('%Y-%m-%d') }}</a></td>
+				<td><a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a></td>
 				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
 				<td style="text-align: right;"></td>
@@ -73,7 +73,7 @@
 				<tr>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
-					<td><a href="/transactions?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'account': posting.account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
+					<td><a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': posting.account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
 					{% if account %}
 						{# Reverse Dr/Cr so it's from the "perspective" of this account #}
 						{% set ns.balance = ns.balance - amount %}
@@ -98,7 +98,7 @@
 		
 		{% if account %}
 			<tr class="total">
-				<td>{{ date.strftime('%Y-%m-%d') }}</td>
+				<td>{{ date_end.strftime('%Y-%m-%d') }}</td>
 				<td>Closing Balance</td>
 				<td></td>
 				<td style="text-align: right;"></td>
@@ -113,7 +113,7 @@
 			</tr>
 		{% else %}
 			<tr class="total">
-				<td>{{ date.strftime('%Y-%m-%d') }}</td>
+				<td>{{ date_end.strftime('%Y-%m-%d') }}</td>
 				<td>Total</td>
 				<td></td>
 				<td style="text-align: right;">{{ total_dr|b }}</td>

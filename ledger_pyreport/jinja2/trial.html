@@ -33,7 +33,7 @@
 		{% for account in accounts %}
 			{# Display in "cost basis" as we have already accounted for unrealised gains #}
 			{% set balance = trial_balance.get_balance(account).exchange(report_currency, True) %}
-			{% set trn_url = "/transactions?" + {'date': trial_balance.date.strftime('%Y-%m-%d'), 'pstart': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
+			{% set trn_url = "/transactions?" + {'date_end': trial_balance.date.strftime('%Y-%m-%d'), 'date_beg': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
 			{% if not balance.near_zero %}
 				<tr>
 					<td><a href="{{ trn_url }}">{{ account.name }}</a></td>

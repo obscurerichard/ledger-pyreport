@@ -139,8 +139,8 @@ def pandl():
 
 @app.route('/transactions')
 def transactions():
-	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
-	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
+	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
+	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	account = flask.request.args.get('account', None)
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
@@ -148,42 +148,42 @@ def transactions():
 	report_currency = Currency(*config['report_currency'])
 	
 	# General ledger
-	l = ledger.raw_transactions_at_date(date)
+	l = ledger.raw_transactions_at_date(date_end)
 	if cash:
 		l = accounting.ledger_to_cash(l, report_currency)
 	
 	# Unrealized gains
-	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date, pstart), report_currency).ledger
+	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date_end, date_beg), report_currency).ledger
 	
 	if not account:
 		# General Ledger
-		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart]
+		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg]
 		
 		total_dr = sum((p.amount for t in transactions for p in t.postings if p.amount > 0), Balance()).exchange(report_currency, True)
 		total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_currency, True)
 		
-		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
+		return flask.render_template('transactions.html', date_beg=date_beg, date_end=date_end, period=describe_period(date_end, date_beg), account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_currency=report_currency, cash=cash)
 	elif commodity:
 		# Account Transactions with commodity detail
 		account = l.get_account(account)
-		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
+		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, pstart - timedelta(days=1), pstart).get_balance(account).clean()
-		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).clean()
+		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg).get_balance(account).clean()
+		closing_balance = accounting.trial_balance(l, date_end, date_beg).get_balance(account).clean()
 		
 		def matching_posting(transaction, amount):
 			return next((p for p in transaction.postings if p.account == account and p.amount.currency == amount.currency), None)
 		
-		return flask.render_template('transactions_commodity.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta, matching_posting=matching_posting)
+		return flask.render_template('transactions_commodity.html', date_beg=date_beg, date_end=date_end, period=describe_period(date_end, date_beg), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta, matching_posting=matching_posting)
 	else:
 		# Account Transactions
 		account = l.get_account(account)
-		transactions = [t for t in l.transactions if t.date <= date and t.date >= pstart and any(p.account == account for p in t.postings)]
+		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, pstart - timedelta(days=1), pstart).get_balance(account).exchange(report_currency, True)
-		closing_balance = accounting.trial_balance(l, date, pstart).get_balance(account).exchange(report_currency, True)
+		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg).get_balance(account).exchange(report_currency, True)
+		closing_balance = accounting.trial_balance(l, date_end, date_beg).get_balance(account).exchange(report_currency, True)
 		
-		return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
+		return flask.render_template('transactions.html', date_beg=date_beg, date_end=date_end, period=describe_period(date_end, date_beg), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
 
 @app.route('/transaction')
 def transaction():

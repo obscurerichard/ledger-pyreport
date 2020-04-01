@@ -22,7 +22,7 @@
 	<tr>
 		<td style="padding-left: calc(2px + {{ level }}em);">
 			{% if pandls|length == 1 %}
-				<a href="/transactions?{{ {'date': pandls[0].date.strftime('%Y-%m-%d'), 'pstart': pandls[0].pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ account.bits[-1] }}</a>
+				<a href="/transactions?{{ {'date_end': pandls[0].date.strftime('%Y-%m-%d'), 'date_beg': pandls[0].pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ account.bits[-1] }}</a>
 			{% else %}
 				{{ account.bits[-1] }}
 			{% endif %}
