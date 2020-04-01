@@ -47,9 +47,7 @@ def trial():
 		l = ledger.raw_transactions_at_date(date)
 		if cash:
 			l = accounting.ledger_to_cash(l, report_currency)
-		trial_balance = accounting.trial_balance(l, date, pstart)
-		
-		trial_balance = accounting.add_unrealized_gains(trial_balance, report_currency)
+		trial_balance = accounting.trial_balance(l, date, pstart, report_currency)
 		
 		total_dr = Amount(0, report_currency)
 		total_cr = Amount(0, report_currency)
@@ -71,7 +69,7 @@ def trial():
 		l = ledger.raw_transactions_at_date(date)
 		if cash:
 			l = accounting.ledger_to_cash(l, report_currency)
-		trial_balances = [accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency) for d, p in zip(dates, pstarts)]
+		trial_balances = [accounting.trial_balance(l, d, p, report_currency) for d, p in zip(dates, pstarts)]
 		
 		# Delete accounts with always zero balances
 		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
@@ -95,7 +93,7 @@ def balance():
 	l = ledger.raw_transactions_at_date(date)
 	if cash:
 		l = accounting.ledger_to_cash(l, report_currency)
-	balance_sheets = [accounting.balance_sheet(accounting.add_unrealized_gains(accounting.trial_balance(l, d, p), report_currency)) for d, p in zip(dates, pstarts)]
+	balance_sheets = [accounting.balance_sheet(accounting.trial_balance(l, d, p, report_currency)) for d, p in zip(dates, pstarts)]
 	
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())
@@ -119,6 +117,7 @@ def pandl():
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	compare = int(flask.request.args['compare'])
 	cash = flask.request.args.get('cash', False)
+	scope = flask.request.args['scope']
 	
 	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
 	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
@@ -127,7 +126,7 @@ def pandl():
 	l = ledger.raw_transactions_at_date(date_end)
 	if cash:
 		l = accounting.ledger_to_cash(l, report_currency)
-	pandls = [accounting.trial_balance(l, de, db) for de, db in zip(dates_end, dates_beg)]
+	pandls = [accounting.trial_balance(l, de, db, report_currency) for de, db in zip(dates_end, dates_beg)]
 	
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())
@@ -135,7 +134,7 @@ def pandl():
 		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in pandls):
 			accounts.remove(account)
 	
-	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency, cash=cash)
+	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency, cash=cash, scope=scope)
 
 @app.route('/transactions')
 def transactions():
@@ -153,7 +152,7 @@ def transactions():
 		l = accounting.ledger_to_cash(l, report_currency)
 	
 	# Unrealized gains
-	l = accounting.add_unrealized_gains(accounting.trial_balance(l, date_end, date_beg), report_currency).ledger
+	l = accounting.trial_balance(l, date_end, date_beg, report_currency).ledger
 	
 	if not account:
 		# General Ledger
@@ -168,8 +167,8 @@ def transactions():
 		account = l.get_account(account)
 		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg).get_balance(account).clean()
-		closing_balance = accounting.trial_balance(l, date_end, date_beg).get_balance(account).clean()
+		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg, report_currency).get_balance(account).clean()
+		closing_balance = accounting.trial_balance(l, date_end, date_beg, report_currency).get_balance(account).clean()
 		
 		def matching_posting(transaction, amount):
 			return next((p for p in transaction.postings if p.account == account and p.amount.currency == amount.currency), None)
@@ -180,8 +179,8 @@ def transactions():
 		account = l.get_account(account)
 		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
 		
-		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg).get_balance(account).exchange(report_currency, True)
-		closing_balance = accounting.trial_balance(l, date_end, date_beg).get_balance(account).exchange(report_currency, True)
+		opening_balance = accounting.trial_balance(l, date_beg - timedelta(days=1), date_beg, report_currency).get_balance(account).exchange(report_currency, True)
+		closing_balance = accounting.trial_balance(l, date_end, date_beg, report_currency).get_balance(account).exchange(report_currency, True)
 		
 		return flask.render_template('transactions.html', date_beg=date_beg, date_end=date_end, period=describe_period(date_end, date_beg), account=account, ledger=l, transactions=transactions, opening_balance=opening_balance, closing_balance=closing_balance, report_currency=report_currency, cash=cash, timedelta=timedelta)
 

@@ -66,15 +66,47 @@
 	<h2>For the {{ period }}</h2>
 	
 	<table class="ledger onedesc">
-		{{ do_accounts(ledger.get_account(config['income_account']), 'Income', True, True) }}
-		<tr><td colspan="2">&nbsp;</td></tr>
+		{# Profit and loss #}
+		{% if scope != 'oci' %}
+			{{ do_accounts(ledger.get_account(config['income_account']), 'Income', True, True) }}
+			<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+			
+			{{ do_accounts(ledger.get_account(config['expenses_account']), 'Expenses', False, False) }}
+			<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+			
+			<tr class="total">
+				<td>Net Profit (Loss)</td>
+				{% for pandl in pandls %}<td>{{ -(pandl.get_total(ledger.get_account(config['income_account'])) + pandl.get_total(ledger.get_account(config['expenses_account']))).exchange(report_currency, True)|a }}</td>{% endfor %}
+			</tr>
+		{% else %}
+			<tr>
+				<th></th>
+				{% for pandl in pandls %}<th class="h2">{{ pandl.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			</tr>
+			<tr>
+				<td>Net Profit (Loss)</td>
+				{% for pandl in pandls %}<td>{{ -(pandl.get_total(ledger.get_account(config['income_account'])) + pandl.get_total(ledger.get_account(config['expenses_account']))).exchange(report_currency, True)|a }}</td>{% endfor %}
+			</tr>
+		{% endif %}
 		
-		{{ do_accounts(ledger.get_account(config['expenses_account']), 'Expenses', False, False) }}
-		<tr><td colspan="2">&nbsp;</td></tr>
-		
-		<tr class="total">
-			<td>Net Surplus (Loss)</td>
-			{% for pandl in pandls %}<td>{{ -(pandl.get_total(ledger.get_account(config['income_account'])) + pandl.get_total(ledger.get_account(config['expenses_account']))).exchange(report_currency, True)|a }}</td>{% endfor %}
-		</tr>
+		{# Other comprehensive income #}
+		{% if scope != 'pandl' %}
+			<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+			<tr><th class="{% if scope == 'both' %}h1{% else %}h2{% endif %}" colspan="{{ pandls|length + 1 }}">Other Comprehensive Income</th></tr>
+			{% for child in ledger.get_account(config['oci_account']).children|sort(attribute='name') if child in accounts %}
+				{{ print_rows(child, True, 0) }}
+			{% endfor %}
+			
+			<tr class="total">
+				<td>Total Other Comprehensive Income</td>
+				{% for pandl in pandls %}<td>{{ -pandl.get_total(ledger.get_account(config['oci_account'])).exchange(report_currency, True)|a }}</td>{% endfor %}
+			</tr>
+			<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+			
+			<tr class="total">
+				<td>Total Comprehensive Income</td>
+				{% for pandl in pandls %}<td>{{ -(pandl.get_total(ledger.get_account(config['income_account'])) + pandl.get_total(ledger.get_account(config['expenses_account'])) + pandl.get_total(ledger.get_account(config['oci_account']))).exchange(report_currency, True)|a }}</td>{% endfor %}
+			</tr>
+		{% endif %}
 	</table>
 {% endblock %}

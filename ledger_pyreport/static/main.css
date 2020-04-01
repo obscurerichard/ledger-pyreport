@@ -86,6 +86,10 @@ table.ledger a:hover {
 	color: #666;
 }
 
+label {
+	margin-left: 1ex;
+}
+
 @media screen {
 	body {
 		padding: 2em;

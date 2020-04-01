@@ -48,6 +48,11 @@
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
 			<label><input name="cash" data-inputgroup="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>
+			<label>Scope: <select name="scope">
+				<option value="pandl" selected>P&L only</option>
+				<option value="oci">OCI only</option>
+				<option value="both">P&L and OCI</option>
+			</select></label>
 		</form>
 	</div>
 	

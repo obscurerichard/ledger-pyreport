@@ -15,6 +15,7 @@ ledger-pyreport is a lightweight Flask webapp for generating interactive and pri
 
 * Correctly values assets/liabilities at market value, and income/expenses at cost (pursuant to [AASB 121](https://www.aasb.gov.au/admin/file/content105/c9/AASB121_08-15_COMPfeb16_01-19.pdf)/[IAS 21](https://www.ifrs.org/issued-standards/list-of-standards/ias-21-the-effects-of-changes-in-foreign-exchange-rates/) para 39)
 * Correctly computes unrealised gains ([even when Ledger does not](https://yingtongli.me/blog/2020/03/31/ledger-gains.html))
+* Accounts for both profit and loss, and other comprehensive income
 * Simulates annual closing of books, with presentation of income/expenses on the balance sheet as retained earnings and current year earnings
 * Can simulate cash basis accounting, using FIFO methodology to recode transactions involving liabilities and non-cash assets
 

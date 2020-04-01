@@ -130,6 +130,9 @@ class Account:
 	def is_cash(self):
 		# Is this a cash asset?
 		return any(self.matches(a) for a in config['cash_asset_accounts'])
+	@property
+	def is_oci(self):
+		return self.matches(config['oci_account'])
 	
 	@property
 	def is_cost(self):

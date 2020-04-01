@@ -9,9 +9,13 @@ liabilities_account: Liabilities
 equity_account: Equity
 income_account: Income
 expenses_account: Expenses
+oci_account: OCI # Other Comprehensive Income
 
 # These accounts will automatically be populated on reports
-unrealized_gains: 'Equity:Unrealized Gains'
+unrealized_gains: 'OCI:Unrealized Gains'
+
+accumulated_oci: 'Equity:Accumulated Other Comprehensive Income'
+current_year_oci: 'Equity:Current Year Other Comprehensive Income'
 retained_earnings: 'Equity:Retained Earnings'
 current_year_earnings: 'Equity:Current Year Earnings'
 
