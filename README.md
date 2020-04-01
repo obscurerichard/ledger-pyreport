@@ -46,3 +46,5 @@ FLASK_APP=ledger_pyreport python -m flask run
 ledger-pyreport expects each of assets, liabilities, equity, income and expenses to be setup in Ledger as a separate top-level account. These accounts should contain a zero balance, with all transactions in child accounts.
 
 Additionally, ledger-pyreport expects the next level of assets and liabilities to be categories of asset and liability (e.g. *Assets:Current*, *Liabilities:Non-current*). These, too, should contain a zero balance.
+
+Ledger-pyreport by default observes the convention that positive amounts in Ledger represent debits, and negative amounts in Ledger represent credits.
