@@ -7,7 +7,7 @@
 
 2019-07-01 Loan
     Assets:Current:Cash at Bank              $500.00
-    Liabilities:Non-current:Personal Loan
+    Liabilities:Non-current:Business Loan
 
 2019-07-02 Application
     Assets:Current:International Account      100.00 EUR @ $1.10
@@ -17,9 +17,9 @@
     Assets:Current:Inventory                      50 Widgets {$7.00}
     Assets:Current:Cash at Bank
 
-2019-08-01 Interest on personal loan
+2019-08-01 Interest on business loan
     Expenses:Interest                        $100.00
-    Liabilities:Non-current:Personal Loan
+    Liabilities:Non-current:Business Loan
 
 2019-08-02 Application
     Assets:Current:International Account      100.00 EUR @ $1.05
