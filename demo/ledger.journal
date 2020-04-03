@@ -1,6 +1,7 @@
 2019-06-30 Conversion balances
     Assets:Current:Cash at Bank             $1000.00
     Assets:Current:Cash on Hand               $50.00
+    Assets:Current:Inventory                     100 Widgets {$5.00}
     Assets:Non-current:Plant                $5000.00
     Equity:Retained Earnings
 
@@ -10,6 +11,10 @@
 
 2019-07-02 Application
     Assets:Current:International Account      100.00 EUR @ $1.10
+    Assets:Current:Cash at Bank
+
+2019-07-03 Inventory purchases
+    Assets:Current:Inventory                      50 Widgets {$7.00}
     Assets:Current:Cash at Bank
 
 2019-08-01 Interest on personal loan

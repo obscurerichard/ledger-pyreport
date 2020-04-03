@@ -13,7 +13,9 @@ ledger-pyreport is a lightweight Flask webapp for generating interactive and pri
 
 ## Features
 
-* Correctly values assets/liabilities at market value, and income/expenses at cost (pursuant to [AASB 121](https://www.aasb.gov.au/admin/file/content105/c9/AASB121_08-15_COMPfeb16_01-19.pdf)/[IAS 21](https://www.ifrs.org/issued-standards/list-of-standards/ias-21-the-effects-of-changes-in-foreign-exchange-rates/) para 39)
+* Correctly values:
+	* assets/liabilities at fair market value (cf. [AASB](https://www.aasb.gov.au/admin/file/content105/c9/AASB9_12-14_COMPdec17_01-19.pdf)/[IFRS 9](http://eifrs.ifrs.org/eifrs/bnstandards/en/IFRS9.pdf) ¶4.1.4, [AASB 121](https://www.aasb.gov.au/admin/file/content105/c9/AASB121_08-15_COMPfeb16_01-19.pdf)/[IAS 21](http://eifrs.ifrs.org/eifrs/bnstandards/en/IAS21.pdf) ¶23) or historical cost (cf. [AASB 102](https://www.aasb.gov.au/admin/file/content105/c9/AASB102_07-15_COMPdec16_01-19.pdf)/[IAS 2](http://eifrs.ifrs.org/eifrs/bnstandards/en/IAS2.pdf) ¶9), as applicable
+	* income/expenses at historical cost (cf. [AASB 121](https://www.aasb.gov.au/admin/file/content105/c9/AASB121_08-15_COMPfeb16_01-19.pdf)/[IAS 21](http://eifrs.ifrs.org/eifrs/bnstandards/en/IAS21.pdf) ¶21)
 * Correctly computes unrealised gains ([even when Ledger does not](https://yingtongli.me/blog/2020/03/31/ledger-gains.html))
 * Accounts for both profit and loss, and other comprehensive income
 * Simulates annual closing of books, with presentation of income/expenses on the balance sheet as retained earnings and current year earnings
@@ -48,3 +50,5 @@ ledger-pyreport expects each of assets, liabilities, equity, income and expenses
 Additionally, ledger-pyreport expects the next level of assets and liabilities to be categories of asset and liability (e.g. *Assets:Current*, *Liabilities:Non-current*). These, too, should contain a zero balance.
 
 Ledger-pyreport by default observes the convention that positive amounts in Ledger represent debits, and negative amounts in Ledger represent credits.
+
+A commodity which has *any* price data in Ledger (including those specified through `@` or `@@`, or explicitly through `P`) will be regarded as a commodity measured at fair market value, and automatically revalued accordingly. A commodity which has *no* price data in Ledger (i.e. lot prices through `{…}` or `{{…}}` only) will be regarded as a commodity measured at historical cost, and will not be subsequently revalued.

@@ -268,10 +268,17 @@ class Balance:
 	def exchange(self, currency, is_cost, date=None, ledger=None):
 		result = Amount(0, currency)
 		for amount in self.amounts:
-			if is_cost or amount.currency.name == currency.name and amount.currency.is_prefix == amount.currency.is_prefix:
+			if is_cost or (amount.currency.name == currency.name and amount.currency.is_prefix == amount.currency.is_prefix):
 				result += amount.exchange(currency, is_cost)
 			else:
-				result += amount.exchange(currency, is_cost, ledger.get_price(amount.currency, currency, date))
+				if any(p[1] == amount.currency.name for p in ledger.prices):
+					# This currency has price information
+					# Measured at fair value
+					result += amount.exchange(currency, is_cost, ledger.get_price(amount.currency, currency, date))
+				else:
+					# This currency has no price information
+					# Measured at historical cost
+					result += amount.exchange(currency, True)
 		return result
 	
 	def __neg__(self):
