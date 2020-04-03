@@ -166,3 +166,18 @@ def ledger_to_cash(ledger, currency):
 			account_to_cash(account, currency)
 	
 	return ledger
+
+# Summarise related transactions
+def account_flows(ledger, date, pstart, accounts):
+	transactions = [t for t in ledger.transactions if any(p.account in accounts for p in t.postings) and t.date <= date and t.date >= pstart]
+	
+	tb = TrialBalance(ledger, date, pstart)
+	
+	for transaction in transactions:
+		for posting in transaction.postings:
+			if posting.account in accounts:
+				continue
+			
+			tb.balances[posting.account.name] = tb.get_balance(posting.account) - posting.amount
+	
+	return tb

@@ -136,6 +136,43 @@ def pandl():
 	
 	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, config=config, report_currency=report_currency, cash=cash, scope=scope)
 
+@app.route('/cashflow')
+def cashflow():
+	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
+	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
+	compare = int(flask.request.args['compare'])
+	method = flask.request.args['method']
+	
+	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
+	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
+	
+	report_currency = Currency(*config['report_currency'])
+	l = ledger.raw_transactions_at_date(date_end)
+	
+	cash_accounts = [a for a in l.accounts.values() if a.is_cash]
+	
+	# Calculate opening and closing cash
+	opening_balances = []
+	closing_balances = []
+	cashflows = []
+	for de, db in zip(dates_end, dates_beg):
+		tb = accounting.trial_balance(l.clone(), db - timedelta(days=1), db, report_currency)
+		opening_balances.append(sum((tb.get_balance(a) for a in cash_accounts), Balance()).exchange(report_currency, True))
+		
+		tb = accounting.trial_balance(l.clone(), de, db, report_currency)
+		closing_balances.append(sum((tb.get_balance(a) for a in cash_accounts), Balance()).exchange(report_currency, True))
+		
+		cashflows.append(accounting.account_flows(tb.ledger, de, db, cash_accounts))
+	
+	if method == 'direct':
+		# Delete accounts with always zero balances
+		accounts = list(l.accounts.values())
+		for account in accounts[:]:
+			if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in cashflows):
+				accounts.remove(account)
+		
+		return flask.render_template('cashflow_direct.html', period=describe_period(date_end, date_beg), ledger=l, cashflows=cashflows, opening_balances=opening_balances, closing_balances=closing_balances, accounts=accounts, config=config, report_currency=report_currency)
+
 @app.route('/transactions')
 def transactions():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')

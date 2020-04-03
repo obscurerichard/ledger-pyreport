@@ -57,6 +57,19 @@
 	</div>
 	
 	<div style="margin-bottom: 1em;">
+		<form action="{{ url_for('cashflow') }}">
+			<button type="submit">Cash flows</button>
+			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			<label>Method: <select name="method">
+				<option value="indirect" selected>Indirect</option>
+				<option value="direct">Direct</option>
+			</select></label>
+		</form>
+	</div>
+	
+	<div style="margin-bottom: 1em;">
 		<form action="{{ url_for('transactions') }}">
 			<button type="submit">General ledger</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
