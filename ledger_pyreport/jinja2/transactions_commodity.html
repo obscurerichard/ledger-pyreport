@@ -47,7 +47,7 @@
 				<td></td>
 				<td></td>
 				<td></td>
-				{{ amount|bt(True, prevlink) }}
+				{{ amount|abs|bt(True, prevlink) }}
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% else %}
@@ -95,7 +95,7 @@
 				<td></td>
 				<td></td>
 				<td></td>
-				{{ amount|bt(True) }}
+				{{ amount|abs|bt(True) }}
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% endfor %}
@@ -107,7 +107,7 @@
 			<td></td>
 			<td></td>
 			{% set closing_balance = closing_balance.exchange(report_currency, True) %}
-			{{ closing_balance|bt(True) }}
+			{{ closing_balance|abs|bt(True) }}
 			<td>{% if closing_balance >= 0 %}Dr{% else %}Cr{% endif %}</td>
 		</tr>
 	</table>
