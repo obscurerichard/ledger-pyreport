@@ -36,7 +36,7 @@
 			{% endif %}
 		</td>
 		{% for balance_sheet in balance_sheets %}
-			{% set amount = (-balance_sheet.get_balance(account) if invert else balance_sheet.get_balance(account)).exchange(report_currency, True) %}
+			{% set amount = (-balance_sheet.get_balance(account) if invert else balance_sheet.get_balance(account)).exchange(report_commodity, True) %}
 			<td>
 				{% if not amount.near_zero %}
 					{% if account.name == config['current_year_earnings'] %}
@@ -74,14 +74,14 @@
 		
 		<tr class="total">
 			<td>Total {{ account_class.bits[-1] }} {{ label }}</td>
-			{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(account_class) if invert else balance_sheet.get_total(account_class)).exchange(report_currency, True)|a }}</td>{% endfor %}
+			{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(account_class) if invert else balance_sheet.get_total(account_class)).exchange(report_commodity, True)|a }}</td>{% endfor %}
 		</tr>
 		<tr><td colspan="2">&nbsp;</td></tr>
 	{% endfor %}
 	
 	<tr class="total">
 		<td>Total {{ label }}</td>
-		{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(root) if invert else balance_sheet.get_total(root)).exchange(report_currency, True)|a }}</td>{% endfor %}
+		{% for balance_sheet in balance_sheets %}<td>{{ (-balance_sheet.get_total(root) if invert else balance_sheet.get_total(root)).exchange(report_commodity, True)|a }}</td>{% endfor %}
 	</tr>
 {% endmacro %}
 
@@ -113,7 +113,7 @@
 		
 		<tr class="total">
 			<td>Total Equity</td>
-			{% for balance_sheet in balance_sheets %}<td>{{ -balance_sheet.get_total(ledger.get_account(config['equity_account'])).exchange(report_currency, True)|a }}</td>{% endfor %}
+			{% for balance_sheet in balance_sheets %}<td>{{ -balance_sheet.get_total(ledger.get_account(config['equity_account'])).exchange(report_commodity, True)|a }}</td>{% endfor %}
 		</tr>
 	</table>
 {% endblock %}

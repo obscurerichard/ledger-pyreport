@@ -61,19 +61,19 @@ def parse_amount(amount):
 		price_str = None
 	
 	if amount_str[0] in list('0123456789-'):
-		# Currency follows number
+		# Commodity follows number
 		bits = amount_str.split()
 		amount_num = Decimal(bits[0])
-		currency = Currency(bits[1].strip('"'), False)
+		commodity = Commodity(bits[1].strip('"'), False)
 	else:
-		# Currency precedes number
-		currency = Currency(amount_str[0], True)
+		# Commodity precedes number
+		commodity = Commodity(amount_str[0], True)
 		amount_num = Decimal(amount_str[1:])
 	
 	if price_str:
-		currency.price = parse_amount(price_str)
+		commodity.price = parse_amount(price_str)
 	
-	return Amount(amount_num, currency)
+	return Amount(amount_num, commodity)
 
 def get_pricedb():
 	output = run_ledger('prices', '--prices-format', '%(quoted(format_date(date))),%(quoted(display_account)),%(quoted(display_amount))\n')
@@ -81,8 +81,8 @@ def get_pricedb():
 	prices = []
 	
 	reader = csv.reader(output.splitlines(), dialect='ledger')
-	for date_str, currency, price_str in reader:
-		prices.append((datetime.strptime(date_str, '%Y-%m-%d'), currency.strip('"'), parse_amount(price_str)))
+	for date_str, commodity, price_str in reader:
+		prices.append((datetime.strptime(date_str, '%Y-%m-%d'), commodity.strip('"'), parse_amount(price_str)))
 	
 	return prices
 

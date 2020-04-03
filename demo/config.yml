@@ -1,7 +1,7 @@
 # Set up how we will call Ledger
 ledger_file: demo/ledger.journal
 ledger_args: []
-report_currency: ['$', True] # True if prefix, False if suffix
+report_commodity: ['$', True] # True if prefix, False if suffix
 
 # Tell ledger-pyreport about the top-level account categories
 assets_account: Assets

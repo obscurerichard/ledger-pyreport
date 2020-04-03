@@ -51,11 +51,11 @@ class Ledger:
 		
 		return account
 	
-	def get_price(self, currency_from, currency_to, date):
-		prices = [p for p in self.prices if p[1] == currency_from.name and p[2].currency == currency_to and p[0].date() <= date.date()]
+	def get_price(self, commodity_from, commodity_to, date):
+		prices = [p for p in self.prices if p[1] == commodity_from.name and p[2].commodity == commodity_to and p[0].date() <= date.date()]
 		
 		if not prices:
-			raise Exception('No price information for {} to {} at {:%Y-%m-%d}'.format(currency_from, currency_to, date))
+			raise Exception('No price information for {} to {} at {:%Y-%m-%d}'.format(commodity_from, commodity_to, date))
 		
 		return max(prices, key=lambda p: p[0])[2]
 
@@ -88,11 +88,11 @@ class Posting:
 	def __repr__(self):
 		return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
 	
-	def exchange(self, currency, date):
-		if self.amount.currency.name == currency.name and self.amount.currency.is_prefix == currency.is_prefix:
+	def exchange(self, commodity, date):
+		if self.amount.commodity.name == commodity.name and self.amount.commodity.is_prefix == commodity.is_prefix:
 			return Amount(self.amount)
 		
-		return self.amount.exchange(currency, True) # Cost basis
+		return self.amount.exchange(commodity, True) # Cost basis
 
 class Account:
 	def __init__(self, ledger, name):
@@ -150,24 +150,24 @@ class Account:
 		return self.is_asset or self.is_liability
 
 class Amount:
-	def __init__(self, amount, currency=None):
+	def __init__(self, amount, commodity=None):
 		if isinstance(amount, Amount):
 			self.amount = amount.amount
-			self.currency = amount.currency
-		elif currency is None:
-			raise TypeError('currency is required')
+			self.commodity = amount.commodity
+		elif commodity is None:
+			raise TypeError('commodity is required')
 		else:
 			self.amount = Decimal(amount)
-			self.currency = currency
+			self.commodity = commodity
 	
 	def tostr(self, round=True):
-		if self.currency.is_prefix:
-			amount_str = ('{}{:.2f}' if round else '{}{}').format(self.currency.name, self.amount)
+		if self.commodity.is_prefix:
+			amount_str = ('{}{:.2f}' if round else '{}{}').format(self.commodity.name, self.amount)
 		else:
-			amount_str = ('{:.2f} {}' if round else '{} {}').format(self.amount, self.currency.name)
+			amount_str = ('{:.2f} {}' if round else '{} {}').format(self.amount, self.commodity.name)
 		
-		if self.currency.price:
-			return '{} {{{}}}'.format(amount_str, self.currency.price.tostr(round))
+		if self.commodity.price:
+			return '{} {{{}}}'.format(amount_str, self.commodity.price.tostr(round))
 		return amount_str
 	
 	def __repr__(self):
@@ -176,12 +176,12 @@ class Amount:
 	def __str__(self):
 		return self.tostr()
 	
-	def compatible_currency(func):
+	def compatible_commodity(func):
 		@functools.wraps(func)
 		def wrapped(self, other):
 			if isinstance(other, Amount):
-				if other.currency != self.currency:
-					raise TypeError('Cannot combine Amounts of currency {} and {}'.format(self.currency.name, other.currency.name))
+				if other.commodity != self.commodity:
+					raise TypeError('Cannot combine Amounts of commodity {} and {}'.format(self.commodity.name, other.commodity.name))
 				other = other.amount
 			elif other != 0:
 				raise TypeError('Cannot combine Amount with non-zero number')
@@ -189,15 +189,15 @@ class Amount:
 		return wrapped
 	
 	def __neg__(self):
-		return Amount(-self.amount, self.currency)
+		return Amount(-self.amount, self.commodity)
 	def __abs__(self):
-		return Amount(abs(self.amount), self.currency)
+		return Amount(abs(self.amount), self.commodity)
 	
 	def __eq__(self, other):
 		if isinstance(other, Amount):
 			if self.amount == 0 and other.amount == 0:
 				return True
-			if other.currency != self.currency:
+			if other.commodity != self.commodity:
 				return False
 			return self.amount == other.amount
 		
@@ -205,46 +205,46 @@ class Amount:
 			return self.amount == 0
 		
 		raise TypeError('Cannot compare Amount with non-zero number')
-	@compatible_currency
+	@compatible_commodity
 	def __ne__(self, other):
 		return self.amount != other
-	@compatible_currency
+	@compatible_commodity
 	def __gt__(self, other):
 		return self.amount > other
-	@compatible_currency
+	@compatible_commodity
 	def __ge__(self, other):
 		return self.amount >= other
-	@compatible_currency
+	@compatible_commodity
 	def __lt__(self, other):
 		return self.amount < other
-	@compatible_currency
+	@compatible_commodity
 	def __le__(self, other):
 		return self.amount <= other
 	
-	@compatible_currency
+	@compatible_commodity
 	def __add__(self, other):
-		return Amount(self.amount + other, self.currency)
-	@compatible_currency
+		return Amount(self.amount + other, self.commodity)
+	@compatible_commodity
 	def __radd__(self, other):
-		return Amount(other + self.amount, self.currency)
-	@compatible_currency
+		return Amount(other + self.amount, self.commodity)
+	@compatible_commodity
 	def __sub__(self, other):
-		return Amount(self.amount - other, self.currency)
-	@compatible_currency
+		return Amount(self.amount - other, self.commodity)
+	@compatible_commodity
 	def __rsub__(self, other):
-		return Amount(other - self.amount, self.currency)
+		return Amount(other - self.amount, self.commodity)
 	
-	def exchange(self, currency, is_cost, price=None):
-		if self.currency.name == currency.name and self.currency.is_prefix == currency.is_prefix:
+	def exchange(self, commodity, is_cost, price=None):
+		if self.commodity.name == commodity.name and self.commodity.is_prefix == commodity.is_prefix:
 			return Amount(self)
 		
-		if is_cost and self.currency.price and self.currency.price.currency.name == currency.name and self.currency.price.currency.is_prefix == currency.is_prefix:
-			return Amount(self.amount * self.currency.price.amount, currency)
+		if is_cost and self.commodity.price and self.commodity.price.commodity.name == commodity.name and self.commodity.price.commodity.is_prefix == commodity.is_prefix:
+			return Amount(self.amount * self.commodity.price.amount, commodity)
 		
 		if price:
-			return Amount(self.amount * price.amount, currency)
+			return Amount(self.amount * price.amount, commodity)
 		
-		raise TypeError('Cannot exchange {} to {}'.format(self.currency, currency))
+		raise TypeError('Cannot exchange {} to {}'.format(self.commodity, commodity))
 	
 	@property
 	def near_zero(self):
@@ -259,26 +259,26 @@ class Balance:
 	def tidy(self):
 		new_amounts = []
 		for amount in self.amounts:
-			new_amount = next((a for a in new_amounts if a.currency == amount.currency), None)
+			new_amount = next((a for a in new_amounts if a.commodity == amount.commodity), None)
 		return Balance(new_amounts)
 	
 	def clean(self):
 		return Balance([a for a in self.amounts if a != 0])
 	
-	def exchange(self, currency, is_cost, date=None, ledger=None):
-		result = Amount(0, currency)
+	def exchange(self, commodity, is_cost, date=None, ledger=None):
+		result = Amount(0, commodity)
 		for amount in self.amounts:
-			if is_cost or (amount.currency.name == currency.name and amount.currency.is_prefix == amount.currency.is_prefix):
-				result += amount.exchange(currency, is_cost)
+			if is_cost or (amount.commodity.name == commodity.name and amount.commodity.is_prefix == amount.commodity.is_prefix):
+				result += amount.exchange(commodity, is_cost)
 			else:
-				if any(p[1] == amount.currency.name for p in ledger.prices):
-					# This currency has price information
+				if any(p[1] == amount.commodity.name for p in ledger.prices):
+					# This commodity has price information
 					# Measured at fair value
-					result += amount.exchange(currency, is_cost, ledger.get_price(amount.currency, currency, date))
+					result += amount.exchange(commodity, is_cost, ledger.get_price(amount.commodity, commodity, date))
 				else:
-					# This currency has no price information
+					# This commodity has no price information
 					# Measured at historical cost
-					result += amount.exchange(currency, True)
+					result += amount.exchange(commodity, True)
 		return result
 	
 	def __neg__(self):
@@ -299,18 +299,18 @@ class Balance:
 		
 		if isinstance(other, Balance):
 			for amount in other.amounts:
-				new_amount = next((a for a in new_amounts if a.currency == amount.currency), None)
+				new_amount = next((a for a in new_amounts if a.commodity == amount.commodity), None)
 				if new_amount is None:
-					new_amount = Amount(0, amount.currency)
+					new_amount = Amount(0, amount.commodity)
 					new_amounts.append(new_amount)
 				new_amount.amount += amount.amount
 				
 				#if new_amount == 0:
 				#	new_amounts.remove(new_amount)
 		elif isinstance(other, Amount):
-			new_amount = next((a for a in new_amounts if a.currency == other.currency), None)
+			new_amount = next((a for a in new_amounts if a.commodity == other.commodity), None)
 			if new_amount is None:
-				new_amount = Amount(0, other.currency)
+				new_amount = Amount(0, other.commodity)
 				new_amounts.append(new_amount)
 			new_amount.amount += other.amount
 			
@@ -326,17 +326,17 @@ class Balance:
 	def __sub__(self, other):
 		return self + (-other)
 
-class Currency:
+class Commodity:
 	def __init__(self, name, is_prefix, price=None):
 		self.name = name
 		self.is_prefix = is_prefix
 		self.price = price
 	
 	def __repr__(self):
-		return '<Currency {} ({})>'.format(self.name, 'prefix' if self.is_prefix else 'suffix')
+		return '<Commodity {} ({})>'.format(self.name, 'prefix' if self.is_prefix else 'suffix')
 	
 	def __eq__(self, other):
-		if not isinstance(other, Currency):
+		if not isinstance(other, Commodity):
 			return False
 		return self.name == other.name and self.is_prefix == other.is_prefix and self.price == other.price
 

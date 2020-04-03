@@ -51,7 +51,7 @@
 		</tr>
 		
 		{% for posting in transaction.postings %}
-			{% set amount = posting.exchange(report_currency, transaction.date) %}
+			{% set amount = posting.exchange(report_commodity, transaction.date) %}
 			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr>
 				<td>{{ posting.comment }}</td>

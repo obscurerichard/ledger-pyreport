@@ -31,9 +31,9 @@
 			<th style="width: 100%;">Description</th>
 			<th style="min-width: 1em;"></th> {# Dr/Cr #}
 			<th style="text-align: right; min-width: 4em;">Amount</th>
-			<th style="min-width: 2em;"></th> {# Currency #}
+			<th style="min-width: 2em;"></th> {# Commodity #}
 			<th style="text-align: right; min-width: 4em;">Balance</th>
-			<th style="min-width: 2em;"></th> {# Currency #}
+			<th style="min-width: 2em;"></th> {# Commodity #}
 			<th style="min-width: 2em;"></th> {# Price #}
 			<th style="min-width: 1em;"></th>
 		</tr>
@@ -106,7 +106,7 @@
 			<td></td>
 			<td></td>
 			<td></td>
-			{% set closing_balance = closing_balance.exchange(report_currency, True) %}
+			{% set closing_balance = closing_balance.exchange(report_commodity, True) %}
 			{{ closing_balance|abs|bt(True) }}
 			<td>{% if closing_balance >= 0 %}Dr{% else %}Cr{% endif %}</td>
 		</tr>

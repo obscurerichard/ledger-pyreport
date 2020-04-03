@@ -36,7 +36,7 @@
 		
 		{% for transaction in transactions %}
 			{% for posting in transaction.postings %}
-				{% set amount = posting.exchange(report_currency, transaction.date) %}
+				{% set amount = posting.exchange(report_commodity, transaction.date) %}
 				<tr>
 					<td>{% if loop.first %}{{ transaction.date.strftime('%Y-%m-%d') }}{% endif %}</td>
 					<td>{% if loop.first %}{{ transaction.description }}{% endif %}</td>

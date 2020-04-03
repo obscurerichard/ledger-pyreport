@@ -68,7 +68,7 @@
 		
 		{% for transaction in transactions %}
 			{% for posting in transaction.postings if posting.account != account %}
-				{% set amount = posting.exchange(report_currency, transaction.date) %}
+				{% set amount = posting.exchange(report_commodity, transaction.date) %}
 				{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 				<tr>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>

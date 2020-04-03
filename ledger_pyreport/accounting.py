@@ -41,9 +41,9 @@ def trial_balance_raw(ledger, date, pstart):
 	return tb
 
 # Trial balance with unrealized gains and OCI
-def trial_balance(ledger, date, pstart, currency):
-	tb_date, r_date = _add_unrealized_gains(trial_balance_raw(ledger, date, pstart), currency)
-	tb_pstart, r_pstart = _add_unrealized_gains(trial_balance_raw(ledger, pstart - timedelta(days=1), pstart), currency)
+def trial_balance(ledger, date, pstart, commodity):
+	tb_date, r_date = _add_unrealized_gains(trial_balance_raw(ledger, date, pstart), commodity)
+	tb_pstart, r_pstart = _add_unrealized_gains(trial_balance_raw(ledger, pstart - timedelta(days=1), pstart), commodity)
 	
 	for account in set(list(r_date.keys()) + list(r_pstart.keys())):
 		if account in r_pstart:
@@ -66,7 +66,7 @@ def trial_balance(ledger, date, pstart, currency):
 	return tb_date
 
 # Adjust (in place) a trial balance for unrealized gains without accumulating OCI
-def _add_unrealized_gains(tb, currency):
+def _add_unrealized_gains(tb, commodity):
 	results = {}
 	unrealized_gain_account = tb.ledger.get_account(config['unrealized_gains'])
 	
@@ -74,8 +74,8 @@ def _add_unrealized_gains(tb, currency):
 		if not account.is_market:
 			continue
 		
-		total_cost = tb.get_balance(account).exchange(currency, True)
-		total_market = tb.get_balance(account).exchange(currency, False, tb.date, tb.ledger)
+		total_cost = tb.get_balance(account).exchange(commodity, True)
+		total_market = tb.get_balance(account).exchange(commodity, False, tb.date, tb.ledger)
 		unrealized_gain = total_market - total_cost
 		
 		if unrealized_gain != 0:
@@ -105,7 +105,7 @@ def balance_sheet(tb):
 	
 	return tb
 
-def account_to_cash(account, currency):
+def account_to_cash(account, commodity):
 	# Apply FIFO methodology to match postings
 	balance = [] # list of [posting, amount to balance, amount remaining, balancing list of [posting, amount balanced]]
 	
@@ -117,7 +117,7 @@ def account_to_cash(account, currency):
 					pass
 				else:
 					# Try to balance postings
-					amount_to_balance = posting.amount.exchange(currency, True).amount
+					amount_to_balance = posting.amount.exchange(commodity, True).amount
 					
 					while amount_to_balance != 0:
 						balancing_posting = next((b for b in balance if b[2] != 0 and math.copysign(1, b[2]) != math.copysign(1, amount_to_balance)), None)
@@ -142,11 +142,11 @@ def account_to_cash(account, currency):
 	
 	# Finalise balanced postings
 	for orig_posting, amount_to_balance, amount_remaining, balancing_postings in balance:
-		posting = Posting(orig_posting.transaction, orig_posting.account, Amount(amount_to_balance, currency))
+		posting = Posting(orig_posting.transaction, orig_posting.account, Amount(amount_to_balance, commodity))
 		posting.transaction.postings.append(posting)
 		
 		for balancing_posting, amount_balanced in balancing_postings:
-			posting.transaction.postings.append(Posting(posting.transaction, balancing_posting.account, Amount(amount_balanced, currency)))
+			posting.transaction.postings.append(Posting(posting.transaction, balancing_posting.account, Amount(amount_balanced, commodity)))
 			
 			if balancing_posting in balancing_posting.transaction.postings:
 				balancing_posting.transaction.postings.remove(balancing_posting)
@@ -154,16 +154,16 @@ def account_to_cash(account, currency):
 		if amount_remaining != 0:
 			if posting.account.is_asset:
 				# Cash - charge any unbalanced remainder to Other Income
-				posting.transaction.postings.append(Posting(posting.transaction, account.ledger.get_account(config['cash_other_income']), Amount(-amount_remaining, currency)))
+				posting.transaction.postings.append(Posting(posting.transaction, account.ledger.get_account(config['cash_other_income']), Amount(-amount_remaining, commodity)))
 			else:
 				# Liabilities, etc. - discard any unbalanced remainder
 				posting.amount.amount -= amount_remaining
 
 # Adjust (in place) a ledger to convert accounting to a cash basis
-def ledger_to_cash(ledger, currency):
+def ledger_to_cash(ledger, commodity):
 	for account in list(ledger.accounts.values()):
 		if not (account.is_cash or account.is_income or account.is_expense or account.is_equity):
-			account_to_cash(account, currency)
+			account_to_cash(account, commodity)
 	
 	return ledger
 
