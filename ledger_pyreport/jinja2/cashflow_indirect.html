@@ -1,0 +1,90 @@
+{#
+    ledger-pyreport
+    Copyright © 2020  Lee Yingtong Li (RunasSudo)
+ 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+ 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+ 
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+{% extends 'base_report.html' %}
+
+{% macro print_rows(account, invert=False, level=0) %}
+	<tr>
+		<td style="padding-left: calc(2px + {{ level }}em);">
+			{% if cashflows|length == 1 %}
+				<a href="/transactions?{{ {'date_end': cashflows[0].date.strftime('%Y-%m-%d'), 'date_beg': cashflows[0].pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ account.bits[-1] }}</a>
+			{% else %}
+				{{ account.bits[-1] }}
+			{% endif %}
+		</td>
+		{% for cashflow in cashflows %}
+			{% set amount = (-cashflow.get_balance(account) if invert else cashflow.get_balance(account)).exchange(report_currency, True) %}
+			<td>{% if not amount.near_zero %}{{ amount|a('/transactions?' + {'date': cashflow.date.strftime('%Y-%m-%d'), 'pstart': cashflow.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode) }}{% endif %}</td>
+		{% endfor %}
+	</tr>
+	
+	{% for child in account.children|sort(attribute='name') if child in accounts %}
+		{{ print_rows(child, invert, level + 1) }}
+	{% endfor %}
+{% endmacro %}
+
+{% block title %}Cash Flow Statement for the {{ period }}{% endblock %}
+
+{% block report %}
+	<h1>Cash Flow Statement</h1>
+	<h2>For the {{ period }}</h2>
+	
+	<table class="ledger onedesc">
+		{# Profit and loss #}
+		<tr>
+			<th></th>
+			{% for cashflow in cashflows %}<th class="h2">{{ cashflow.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+		</tr>
+		<tr>
+			<td>Total Comprehensive Income</td>
+			{% for profit in profits %}<td>{{ profit|a }}</td>{% endfor %}
+		</tr>
+		<tr><td colspan="{{ cashflows|length + 1 }}">&nbsp;</td></tr>
+		
+		{# Cash flows #}
+		<tr>
+			<th class="h2" colspan="{{ cashflows|length + 1 }}">Adjustments for Changes in Non-cash Accounts</th>
+		</tr>
+		{% for account in ledger.root_account.children|sort(attribute='name') if account in accounts %}
+			{{ print_rows(account, invert=invert) }}
+		{% endfor %}
+		<tr class="total">
+			<td>Total Adjustments</td>
+			{% for cashflow in cashflows %}<td>{{ cashflow.get_total(ledger.root_account).exchange(report_currency, True)|a }}</td>{% endfor %}
+		</tr>
+		<tr class="total">
+			<td>Net Cash Inflow (Outflow)</td>
+			{% for cashflow in cashflows %}<td>{{ (profits[loop.index0] + cashflow.get_total(ledger.root_account).exchange(report_currency, True))|a }}</td>{% endfor %}
+		</tr>
+		<tr><td colspan="{{ cashflows|length + 1 }}">&nbsp;</td></tr>
+		
+		{# Summary #}
+		<tr>
+			<td>Opening Cash</td>
+			{% for opening_balance in opening_balances %}<td>{{ opening_balance|a }}</td>{% endfor %}
+		</tr>
+		<tr>
+			<td>Net Cash Inflow (Outflow)</td>
+			{% for cashflow in cashflows %}<td>{{ (profits[loop.index0] + cashflow.get_total(ledger.root_account).exchange(report_currency, True))|a }}</td>{% endfor %}
+		</tr>
+		<tr class="total">
+			<td>Closing Cash</td>
+			{% for closing_balance in closing_balances %}<td>{{ closing_balance|a }}</td>{% endfor %}
+		</tr>
+	</table>
+{% endblock %}

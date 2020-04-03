@@ -155,6 +155,7 @@ def cashflow():
 	opening_balances = []
 	closing_balances = []
 	cashflows = []
+	profits = []
 	for de, db in zip(dates_end, dates_beg):
 		tb = accounting.trial_balance(l.clone(), db - timedelta(days=1), db, report_currency)
 		opening_balances.append(sum((tb.get_balance(a) for a in cash_accounts), Balance()).exchange(report_currency, True))
@@ -162,16 +163,27 @@ def cashflow():
 		tb = accounting.trial_balance(l.clone(), de, db, report_currency)
 		closing_balances.append(sum((tb.get_balance(a) for a in cash_accounts), Balance()).exchange(report_currency, True))
 		
-		cashflows.append(accounting.account_flows(tb.ledger, de, db, cash_accounts))
+		if method == 'direct':
+			# Determine transactions affecting cash assets
+			cashflows.append(accounting.account_flows(tb.ledger, de, db, cash_accounts, True))
+		else:
+			# Determine net profit (loss)
+			profits.append(-(tb.get_total(tb.ledger.get_account(config['income_account'])) + tb.get_total(tb.ledger.get_account(config['expenses_account'])) + tb.get_total(tb.ledger.get_account(config['oci_account']))).exchange(report_currency, True))
+			
+			# Determine transactions affecting equity, liabilities and non-cash assets
+			noncash_accounts = [a for a in l.accounts.values() if a.is_equity or a.is_liability or (a.is_asset and not a.is_cash)]
+			cashflows.append(accounting.account_flows(tb.ledger, de, db, noncash_accounts, False))
+	
+	# Delete accounts with always zero balances
+	accounts = list(l.accounts.values())
+	for account in accounts[:]:
+		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in cashflows):
+			accounts.remove(account)
 	
 	if method == 'direct':
-		# Delete accounts with always zero balances
-		accounts = list(l.accounts.values())
-		for account in accounts[:]:
-			if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in cashflows):
-				accounts.remove(account)
-		
 		return flask.render_template('cashflow_direct.html', period=describe_period(date_end, date_beg), ledger=l, cashflows=cashflows, opening_balances=opening_balances, closing_balances=closing_balances, accounts=accounts, config=config, report_currency=report_currency)
+	else:
+		return flask.render_template('cashflow_indirect.html', period=describe_period(date_end, date_beg), ledger=l, cashflows=cashflows, profits=profits, opening_balances=opening_balances, closing_balances=closing_balances, accounts=accounts, config=config, report_currency=report_currency)
 
 @app.route('/transactions')
 def transactions():
