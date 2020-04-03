@@ -7,6 +7,7 @@ ledger-pyreport is a lightweight Flask webapp for generating interactive and pri
 * Trial balance, and comparative trial balance
 * Balance sheet, and comparative balance sheet
 * Income statement, and comparative income statement
+* Cash flow statement, and comparative cash flow statement (direct and indirect methods)
 * General ledger
 * Account transactions, with or without itemisation of commodities
 * Transaction detail, with or without itemisation of commodities
