@@ -40,11 +40,10 @@ def trial():
 	compare = int(flask.request.args['compare'])
 	cash = flask.request.args.get('cash', False)
 	
-	report_commodity = Commodity(*config['report_commodity'])
-	
 	if compare == 0:
 		# Get trial balance
 		l = ledger.raw_transactions_at_date(date)
+		report_commodity = l.get_commodity(config['report_commodity'])
 		if cash:
 			l = accounting.ledger_to_cash(l, report_commodity)
 		trial_balance = accounting.trial_balance(l, date, pstart, report_commodity)
@@ -67,6 +66,7 @@ def trial():
 		pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
 		
 		l = ledger.raw_transactions_at_date(date)
+		report_commodity = l.get_commodity(config['report_commodity'])
 		if cash:
 			l = accounting.ledger_to_cash(l, report_commodity)
 		trial_balances = [accounting.trial_balance(l.clone(), d, p, report_commodity) for d, p in zip(dates, pstarts)]
@@ -89,8 +89,8 @@ def balance():
 	dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
 	pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
 	
-	report_commodity = Commodity(*config['report_commodity'])
 	l = ledger.raw_transactions_at_date(date)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	balance_sheets = [accounting.balance_sheet(accounting.trial_balance(l.clone(), d, p, report_commodity)) for d, p in zip(dates, pstarts)]
@@ -122,8 +122,8 @@ def pandl():
 	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
 	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
 	
-	report_commodity = Commodity(*config['report_commodity'])
 	l = ledger.raw_transactions_at_date(date_end)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	pandls = [accounting.trial_balance(l.clone(), de, db, report_commodity) for de, db in zip(dates_end, dates_beg)]
@@ -146,8 +146,8 @@ def cashflow():
 	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
 	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
 	
-	report_commodity = Commodity(*config['report_commodity'])
 	l = ledger.raw_transactions_at_date(date_end)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	
 	cash_accounts = [a for a in l.accounts.values() if a.is_cash]
 	
@@ -193,10 +193,9 @@ def transactions():
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
 	
-	report_commodity = Commodity(*config['report_commodity'])
-	
 	# General ledger
 	l = ledger.raw_transactions_at_date(date_end)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	
@@ -240,10 +239,9 @@ def transaction():
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
 	
-	report_commodity = Commodity(*config['report_commodity'])
-	
 	# General ledger
 	l = ledger.raw_transactions_at_date(None)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	
@@ -326,9 +324,8 @@ def debug_noncash_transactions():
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	account = flask.request.args.get('account')
 	
-	report_commodity = Commodity(*config['report_commodity'])
-	
 	l = ledger.raw_transactions_at_date(date)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	account = l.get_account(account)
 	
 	transactions = [t for t in l.transactions if any(p.account == account for p in t.postings)]
@@ -343,9 +340,8 @@ def debug_imbalances():
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	cash = flask.request.args.get('cash', False)
 	
-	report_commodity = Commodity(*config['report_commodity'])
-	
 	l = ledger.raw_transactions_at_date(date)
+	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	

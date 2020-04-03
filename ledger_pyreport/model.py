@@ -27,6 +27,7 @@ class Ledger:
 		self.accounts = {}
 		self.transactions = []
 		
+		self.commodities = {}
 		self.prices = []
 	
 	def clone(self):
@@ -50,6 +51,9 @@ class Ledger:
 		self.accounts[name] = account
 		
 		return account
+	
+	def get_commodity(self, name):
+		return self.commodities[name]
 	
 	def get_price(self, commodity_from, commodity_to, date):
 		prices = [p for p in self.prices if p[1] == commodity_from.name and p[2].commodity == commodity_to and p[0].date() <= date.date()]
@@ -89,7 +93,7 @@ class Posting:
 		return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
 	
 	def exchange(self, commodity, date):
-		if self.amount.commodity.name == commodity.name and self.amount.commodity.is_prefix == commodity.is_prefix:
+		if self.amount.commodity.name == commodity.name:
 			return Amount(self.amount)
 		
 		return self.amount.exchange(commodity, True) # Cost basis
@@ -235,10 +239,10 @@ class Amount:
 		return Amount(other - self.amount, self.commodity)
 	
 	def exchange(self, commodity, is_cost, price=None):
-		if self.commodity.name == commodity.name and self.commodity.is_prefix == commodity.is_prefix:
+		if self.commodity.name == commodity.name:
 			return Amount(self)
 		
-		if is_cost and self.commodity.price and self.commodity.price.commodity.name == commodity.name and self.commodity.price.commodity.is_prefix == commodity.is_prefix:
+		if is_cost and self.commodity.price and self.commodity.price.commodity.name == commodity.name:
 			return Amount(self.amount * self.commodity.price.amount, commodity)
 		
 		if price:
@@ -268,7 +272,7 @@ class Balance:
 	def exchange(self, commodity, is_cost, date=None, ledger=None):
 		result = Amount(0, commodity)
 		for amount in self.amounts:
-			if is_cost or (amount.commodity.name == commodity.name and amount.commodity.is_prefix == amount.commodity.is_prefix):
+			if is_cost or amount.commodity.name == commodity.name:
 				result += amount.exchange(commodity, is_cost)
 			else:
 				if any(p[1] == amount.commodity.name for p in ledger.prices):
@@ -338,7 +342,10 @@ class Commodity:
 	def __eq__(self, other):
 		if not isinstance(other, Commodity):
 			return False
-		return self.name == other.name and self.is_prefix == other.is_prefix and self.price == other.price
+		return self.name == other.name and self.price == other.price
+	
+	def strip_price(self):
+		return Commodity(self.name, self.is_prefix)
 
 class TrialBalance:
 	def __init__(self, ledger, date, pstart):

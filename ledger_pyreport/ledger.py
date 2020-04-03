@@ -104,7 +104,11 @@ def raw_transactions_at_date(date):
 		if ';' in comment:
 			comment = comment[comment.index(';')+1:].strip()
 		
-		posting = Posting(transaction, ledger.get_account(account_str), parse_amount(amount_str), comment=comment)
+		amount = parse_amount(amount_str)
+		posting = Posting(transaction, ledger.get_account(account_str), amount, comment=comment)
 		transaction.postings.append(posting)
+		
+		if amount.commodity.name not in ledger.commodities:
+			ledger.commodities[amount.commodity.name] = amount.commodity.strip_price()
 	
 	return ledger
