@@ -15,9 +15,9 @@ oci_account: OCI # Other Comprehensive Income
 unrealized_gains: 'OCI:Unrealized Gains'
 
 accumulated_oci: 'Equity:Accumulated Other Comprehensive Income'
-current_year_oci: 'Equity:Current Year Other Comprehensive Income'
+current_year_oci: 'Equity:Accumulated Other Comprehensive Income:Current Year Other Comprehensive Income'
 retained_earnings: 'Equity:Retained Earnings'
-current_year_earnings: 'Equity:Current Year Earnings'
+current_year_earnings: 'Equity:Retained Earnings:Current Year Earnings'
 
 # Which asset accounts to consider in cash basis mode
 cash_asset_accounts: ['Assets:Current:Cash on Hand', 'Assets:Current:Cash at Bank', 'Assets:Current:International Account']
