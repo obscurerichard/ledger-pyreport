@@ -59,7 +59,11 @@ def trial():
 			else:
 				total_cr -= balance
 		
-		return flask.render_template('trial.html', date=date, pstart=pstart, trial_balance=trial_balance, accounts=sorted(l.accounts.values(), key=lambda a: a.name), total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity)
+		# Identify which accounts have transactions
+		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
+		trial_balance.trn_accounts = [a for a in accounts if any(p.account == a for t in l.transactions for p in t.postings if t.date >= pstart and t.date <= date)]
+		
+		return flask.render_template('trial.html', date=date, pstart=pstart, trial_balance=trial_balance, accounts=accounts, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity)
 	else:
 		# Get multiple trial balances for comparison
 		dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
@@ -71,10 +75,14 @@ def trial():
 			l = accounting.ledger_to_cash(l, report_commodity)
 		trial_balances = [accounting.trial_balance(l.clone(), d, p, report_commodity) for d, p in zip(dates, pstarts)]
 		
-		# Delete accounts with always zero balances
+		# Identify which accounts have transactions in which periods
 		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
+		for trial_balance in trial_balances:
+			trial_balance.trn_accounts = [a for a in accounts if any(p.account == a for t in l.transactions for p in t.postings if t.date >= trial_balance.pstart and t.date <= trial_balance.date)]
+		
+		# Delete accounts with always no transactions
 		for account in accounts[:]:
-			if all(t.get_balance(account).exchange(report_commodity, True).near_zero for t in trial_balances):
+			if not any(account in b.trn_accounts for b in trial_balances):
 				accounts.remove(account)
 		
 		return flask.render_template('trial_multiple.html', trial_balances=trial_balances, accounts=accounts, report_commodity=report_commodity, cash=cash)

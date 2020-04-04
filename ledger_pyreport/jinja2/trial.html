@@ -30,17 +30,15 @@
 			<th class="h1">Dr</th>
 			<th class="h1">Cr</th>
 		</tr>
-		{% for account in accounts %}
+		{% for account in accounts if account in trial_balance.trn_accounts %}
 			{# Display in "cost basis" as we have already accounted for unrealised gains #}
 			{% set balance = trial_balance.get_balance(account).exchange(report_commodity, True) %}
 			{% set trn_url = "/transactions?" + {'date_end': trial_balance.date.strftime('%Y-%m-%d'), 'date_beg': trial_balance.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
-			{% if not balance.near_zero %}
-				<tr>
-					<td><a href="{{ trn_url }}">{{ account.name }}</a></td>
-					<td>{% if balance > 0 %}<a href="{{ trn_url }}">{{ balance|b }}</a>{% endif %}</td>
-					<td>{% if balance < 0 %}<a href="{{ trn_url }}">{{ -balance|b }}</a>{% endif %}</td>
-				</tr>
-			{% endif %}
+			<tr>
+				<td><a href="{{ trn_url }}">{{ account.name }}</a></td>
+				<td>{% if balance >= 0 %}<a href="{{ trn_url }}">{{ balance|b }}</a>{% endif %}</td>
+				<td>{% if balance < 0 %}<a href="{{ trn_url }}">{{ -balance|b }}</a>{% endif %}</td>
+			</tr>
 		{% endfor %}
 		<tr class="total">
 			<td></td>
