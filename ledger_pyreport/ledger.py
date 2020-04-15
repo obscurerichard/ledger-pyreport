@@ -90,10 +90,10 @@ def raw_transactions_at_date(date):
 	ledger = Ledger(date)
 	ledger.prices = get_pricedb()
 	
-	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment))\n')
+	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment)),%(quoted(state))\n')
 	
 	reader = csv.reader(output.splitlines(), dialect='ledger')
-	for trn_id, date_str, code, payee, account_str, amount_str, comment in reader:
+	for trn_id, date_str, code, payee, account_str, amount_str, comment, state_str in reader:
 		if not ledger.transactions or trn_id != ledger.transactions[-1].id:
 			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code=code)
 			ledger.transactions.append(transaction)
@@ -105,7 +105,7 @@ def raw_transactions_at_date(date):
 			comment = comment[comment.index(';')+1:].strip()
 		
 		amount = parse_amount(amount_str)
-		posting = Posting(transaction, ledger.get_account(account_str), amount, comment=comment)
+		posting = Posting(transaction, ledger.get_account(account_str), amount, comment=comment, state=Posting.State(int(state_str)))
 		transaction.postings.append(posting)
 		
 		if amount.commodity.name not in ledger.commodities:

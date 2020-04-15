@@ -17,6 +17,7 @@
 from .config import config
 
 from decimal import Decimal
+from enum import Enum
 import functools
 
 class Ledger:
@@ -83,11 +84,17 @@ class Transaction:
 		return '\n'.join(result)
 
 class Posting:
-	def __init__(self, transaction, account, amount, comment=None):
+	class State(Enum):
+		UNCLEARED = 0
+		CLEARED = 1
+		PENDING = 2
+	
+	def __init__(self, transaction, account, amount, comment=None, state=State.UNCLEARED):
 		self.transaction = transaction
 		self.account = account
 		self.amount = Amount(amount)
 		self.comment = comment
+		self.state = state
 	
 	def __repr__(self):
 		return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
