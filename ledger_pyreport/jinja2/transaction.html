@@ -55,7 +55,7 @@
 			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr>
 				<td>{{ posting.comment }}</td>
-				<td>{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</td>
+				<td><a href="/transactions?{{ {'date_end': transaction.date.strftime('%Y-%m-%d'), 'date_beg': transaction.date.strftime('%Y-%m-%d'), 'account': posting.account.name}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
 				<td style="text-align: right;">{% if amount > 0 %}{{ amount|b }}{% endif %}</td>
 				<td style="text-align: right;">{% if amount < 0 %}{{ -amount|b }}{% endif %}</td>
 			</tr>
