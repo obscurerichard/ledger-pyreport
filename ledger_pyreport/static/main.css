@@ -20,6 +20,8 @@ body {
 	font-family: 'TeX Gyre Termes', 'Nimbus Roman', 'Times New Roman', 'Liberation Serif', Times, serif;
 }
 
+/* Tables */
+
 h1 {
 	text-align: center;
 	font-size: x-large;
@@ -73,6 +75,8 @@ table.ledger a:hover {
 	text-decoration: underline;
 }
 
+/* Navigation bar */
+
 .nav-header {
 	color: #888;
 	position: absolute;
@@ -86,6 +90,8 @@ table.ledger a:hover {
 	color: #666;
 }
 
+/* Home page */
+
 .index-group {
 	margin-bottom: 1em;
 	line-height: 2;
@@ -93,6 +99,26 @@ table.ledger a:hover {
 label {
 	margin-left: 1ex;
 	white-space: nowrap;
+}
+
+/* Toasts */
+
+.toast {
+	opacity: 0%;
+	transition: opacity 0.2s;
+	
+	position: fixed;
+	bottom: 2em;
+	left: 50%;
+	transform: translateX(-50%);
+	
+	background-color: #eee;
+	padding: 0.5em 1.5em;
+	border: 1px solid #666;
+}
+.toast.visible {
+	opacity: 100%;
+	transition: opacity 0s;
 }
 
 @media screen {

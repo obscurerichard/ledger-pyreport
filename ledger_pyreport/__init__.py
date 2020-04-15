@@ -286,20 +286,20 @@ def filter_amount(amt, link=None):
 			return flask.Markup('<a href="{}"><span title="{}">({})</span></a>'.format(link, amt.tostr(False), amt_str))
 	else:
 		if is_pos:
-			return flask.Markup('<span title="{}">{}</span>&nbsp;'.format(amt.tostr(False), amt_str))
+			return flask.Markup('<span class="copyable-amount" title="{}">{}</span>&nbsp;'.format(amt.tostr(False), amt_str))
 		else:
-			return flask.Markup('<span title="{}">({})</span>'.format(amt.tostr(False), amt_str))
+			return flask.Markup('<span class="copyable-amount" title="{}">({})</span>'.format(amt.tostr(False), amt_str))
 
 @app.template_filter('b')
 def filter_amount_positive(amt):
-	return flask.Markup('<span title="{}">{:,.2f}</span>'.format(amt.tostr(False), amt.amount).replace(',', '&#8239;'))
+	return flask.Markup('<span class="copyable-amount" title="{}">{:,.2f}</span>'.format(amt.tostr(False), amt.amount).replace(',', '&#8239;'))
 
 @app.template_filter('bc')
 def filter_commodity_positive(amt):
 	if amt.commodity.is_prefix:
-		return flask.Markup('<span title="{}">{}{:,.2f}</span>'.format(amt.tostr(False), amt.commodity.name, amt.amount).replace(',', '&#8239;'))
+		return flask.Markup('<span class="copyable-amount" title="{}">{}{:,.2f}</span>'.format(amt.tostr(False), amt.commodity.name, amt.amount).replace(',', '&#8239;'))
 	else:
-		return flask.Markup('<span title="{}">{:,.2f} {}</span>'.format(amt.tostr(False), amt.amount, amt.commodity.name).replace(',', '&#8239;'))
+		return flask.Markup('<span class="copyable-amount" title="{}">{:,.2f} {}</span>'.format(amt.tostr(False), amt.amount, amt.commodity.name).replace(',', '&#8239;'))
 
 @app.template_filter('bt')
 def filter_commodity_table_positive(amt, show_price, link=None):
@@ -313,12 +313,12 @@ def filter_commodity_table_positive(amt, show_price, link=None):
 	
 	amt_full = amt.tostr(False)
 	
-	result.append('<td style="text-align: right;"><a href="{}"><span title="{}">{}</span></a></td>'.format(link, amt_full, amt_str) if link else '<td style="text-align: right;"><span title="{}">{}</span></td>'.format(amt_full, amt_str))
-	result.append('<td><span title="{}">{}</span></td>'.format(amt_full, cur_str))
+	result.append('<td style="text-align: right;"><a href="{}"><span class="copyable-amount" title="{}">{}</span></a></td>'.format(link, amt_full, amt_str) if link else '<td style="text-align: right;"><span class="copyable-amount" title="{}">{}</span></td>'.format(amt_full, amt_str))
+	result.append('<td><span class="copyable-amount" title="{}">{}</span></td>'.format(amt_full, cur_str))
 	
 	if show_price:
 		if amt.commodity.price:
-			result.append('<td><span title="{}">{{{}}}</span></td>'.format(amt_full, filter_commodity_positive(amt.commodity.price)))
+			result.append('<td>{{{}}}</td>'.format(filter_commodity_positive(amt.commodity.price)))
 		else:
 			result.append('<td></td>')
 	

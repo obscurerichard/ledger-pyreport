@@ -1,4 +1,4 @@
-{#
+/*
     ledger-pyreport
     Copyright © 2020  Lee Yingtong Li (RunasSudo)
  
@@ -14,21 +14,22 @@
  
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#}
+*/
 
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<title>{% block title %}{% endblock %}</title>
-		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-	</head>
-	<body>
-		{% block body %}{% endblock %}
-		
-		<script src="/static/toasts.js"></script>
-		<script src="/static/copyAmounts.js"></script>
-		<div class="toast"></div>
-	</body>
-</html>
+// Consider replacing this when the Clipboard API has better availability
+function copyText(text) {
+	var ta = document.createElement('textarea');
+	ta.value = text;
+	ta.style = 'position: fixed; top: 0; left: 0;'; // Avoid scrolling
+	document.body.appendChild(ta);
+	ta.select();
+	document.execCommand('copy');
+	document.body.removeChild(ta);
+}
+
+document.querySelectorAll('.copyable-amount').forEach(function(el) {
+	el.addEventListener('click', function() {
+		copyText(el.getAttribute('title'));
+		showToast('Amount was copied to the clipboard');
+	});
+});
