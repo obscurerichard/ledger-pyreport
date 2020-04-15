@@ -1,5 +1,5 @@
 # Set up how we will call Ledger
-ledger_file: demo/ledger.journal
+ledger_file: ledger.journal
 ledger_args: []
 report_commodity: '$'
 
@@ -23,3 +23,7 @@ current_year_earnings: 'Equity:Retained Earnings:Current Year Earnings'
 cash_asset_accounts: ['Assets:Current:Cash on Hand', 'Assets:Current:Cash at Bank', 'Assets:Current:International Account']
 # Which account to charge non-cash transactions to in cash basis mode, when no other account is suitable
 cash_other_income: 'Income:Other Income'
+
+# Extensions to load
+extensions:
+- ext_pending.py

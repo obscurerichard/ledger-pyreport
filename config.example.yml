@@ -23,3 +23,6 @@ current_year_earnings: 'Equity:Current Year Earnings'
 cash_asset_accounts: ['Assets:Current:Cash on Hand', 'Assets:Current:Cash at Bank']
 # Which account to charge non-cash transactions to in cash basis mode, when no other account is suitable
 cash_other_income: 'Income:Other Income'
+
+# Extensions to load
+extensions: []

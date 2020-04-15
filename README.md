@@ -21,6 +21,7 @@ ledger-pyreport is a lightweight Flask webapp for generating interactive and pri
 * Accounts for both profit and loss, and other comprehensive income
 * Simulates annual closing of books, with presentation of income/expenses on the balance sheet as retained earnings and current year earnings
 * Can simulate cash basis accounting, using FIFO methodology to recode transactions involving liabilities and non-cash assets
+* Extensible through custom programming hooks
 
 ## Background, demo and screenshots
 

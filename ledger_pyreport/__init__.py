@@ -359,3 +359,8 @@ def debug_imbalances():
 	total_cr = sum((p.amount for t in transactions for p in t.postings if p.amount < 0), Balance()).exchange(report_commodity, True)
 	
 	return flask.render_template('transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=None, ledger=l, transactions=transactions, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity, cash=cash)
+
+# Load extensions
+for ext_name in config['extensions']:
+	with open(ext_name, 'r') as f:
+		exec(f.read())

@@ -38,4 +38,8 @@
     Expenses:Depreciation                    $500.00
     Assets:Non-current:Plant:Less Accumulated Depreciation
 
+2019-10-02 Pending transaction
+    Expenses:Stationery                       $10.00
+    ! Assets:Current:Cash at Bank
+
 P 2019-10-01 00:00:00 EUR $1.30
