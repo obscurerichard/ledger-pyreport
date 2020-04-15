@@ -136,13 +136,35 @@ def pandl():
 		l = accounting.ledger_to_cash(l, report_commodity)
 	pandls = [accounting.trial_balance(l.clone(), de, db, report_commodity) for de, db in zip(dates_end, dates_beg)]
 	
+	# Process separate P&L accounts
+	separate_pandls = []
+	for separate_pandl_name in config['separate_pandl']:
+		acc_income = l.get_account(config['income_account'] + ':' + separate_pandl_name)
+		acc_expenses = l.get_account(config['expenses_account'] + ':' + separate_pandl_name)
+		separate_pandls.append((acc_income, acc_expenses))
+		
+		# Unlink from parents so raw figures not counted in income/expense total
+		acc_income.parent.children.remove(acc_income)
+		acc_expenses.parent.children.remove(acc_expenses)
+		
+		# Add summary account
+		for i, de, db in zip(range(compare + 1), dates_end, dates_beg):
+			balance = (pandls[i].get_total(acc_income) + pandls[i].get_total(acc_expenses)).exchange(report_commodity, True)
+			
+			if balance <= 0: # Credit
+				summary_account = l.get_account(config['income_account'] + ':' + separate_pandl_name + ' Profit')
+			else:
+				summary_account = l.get_account(config['expenses_account'] + ':' + separate_pandl_name + ' Loss')
+			
+			pandls[i].balances[summary_account.name] = pandls[i].get_balance(summary_account) + balance
+	
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())
 	for account in accounts[:]:
 		if all(p.get_balance(account) == 0 and p.get_total(account) == 0 for p in pandls):
 			accounts.remove(account)
 	
-	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, config=config, report_commodity=report_commodity, cash=cash, scope=scope)
+	return flask.render_template('pandl.html', period=describe_period(date_end, date_beg), ledger=l, pandls=pandls, accounts=accounts, separate_pandls=separate_pandls, config=config, report_commodity=report_commodity, cash=cash, scope=scope)
 
 @app.route('/cashflow')
 def cashflow():

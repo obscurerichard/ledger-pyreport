@@ -17,6 +17,14 @@
     Assets:Current:Inventory                      50 Widgets {$7.00}
     Assets:Current:Cash at Bank
 
+2019-07-04 Sale
+    Assets:Current:Cash at Bank                 $100
+    Income:Business:Sales
+
+2019-07-04 Sale
+    Expenses:Business:Cost of Goods Sold          10 Widgets {$5.00}
+    Assets:Current:Inventory
+
 2019-08-01 Interest on business loan
     Expenses:Interest                        $100.00
     Liabilities:Non-current:Business Loan

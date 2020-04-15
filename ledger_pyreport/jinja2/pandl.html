@@ -68,7 +68,55 @@
 	<table class="ledger onedesc">
 		{# Profit and loss #}
 		{% if scope != 'oci' %}
-			{{ do_accounts(ledger.get_account(config['income_account']), 'Income', True, True) }}
+			{# Separate P&L accounts #}
+			{% for acc_income, acc_expenses in separate_pandls %}
+				<tr><th class="h1" colspan="{{ pandls|length + 1 }}">{{ acc_income.bits[-1] }} Account</th></tr>
+				
+				{# Income #}
+				
+				<tr>
+					{% if loop.first %}
+						<th class="h2">{{ acc_income.bits[-1] }} Income</th>
+						{% for pandl in pandls %}<th class="h2">{{ pandl.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+					{% else %}
+						<th class="h2" colspan="{{ pandls|length + 1 }}">{{ acc_income.bits[-1] }} Income</th>
+					{% endif %}
+				</tr>
+				
+				{% for account in acc_income.children|sort(attribute='name') if account in accounts %}
+					{{ print_rows(account, invert=True) }}
+				{% endfor %}
+				
+				<tr class="total">
+					<td>Total {{ acc_income.bits[-1] }} Income</td>
+					{% for pandl in pandls %}<td>{{ -pandl.get_total(acc_income).exchange(report_commodity, True)|a }}</td>{% endfor %}
+				</tr>
+				<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+				
+				{# Expenses #}
+				
+				<tr><th class="h2" colspan="{{ pandls|length + 1 }}">{{ acc_income.bits[-1] }} Expenses</th></tr>
+				
+				{% for account in acc_expenses.children|sort(attribute='name') if account in accounts %}
+					{{ print_rows(account) }}
+				{% endfor %}
+				
+				<tr class="total">
+					<td>Total {{ acc_income.bits[-1] }} Expenses</td>
+					{% for pandl in pandls %}<td>{{ pandl.get_total(acc_expenses).exchange(report_commodity, True)|a }}</td>{% endfor %}
+				</tr>
+				<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+				
+				{# Net Profit #}
+				
+				<tr class="total">
+					<td>{{ acc_income.bits[-1] }} Profit (Loss)</td>
+					{% for pandl in pandls %}<td>{{ -(pandl.get_total(acc_income) + pandl.get_total(acc_expenses)).exchange(report_commodity, True)|a }}</td>{% endfor %}
+				</tr>
+				<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
+			{% endfor %}
+			
+			{{ do_accounts(ledger.get_account(config['income_account']), 'Income', True, separate_pandls|length == 0) }}
 			<tr><td colspan="{{ pandls|length + 1}}">&nbsp;</td></tr>
 			
 			{{ do_accounts(ledger.get_account(config['expenses_account']), 'Expenses', False, False) }}

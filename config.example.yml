@@ -11,6 +11,9 @@ income_account: Income
 expenses_account: Expenses
 oci_account: OCI # Other Comprehensive Income
 
+# These income and expense categories appear separately on the income statement
+separate_pandl: []
+
 # These accounts will automatically be populated on reports
 unrealized_gains: 'OCI:Unrealized Gains'
 
