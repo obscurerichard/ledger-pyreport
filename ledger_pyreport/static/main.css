@@ -86,8 +86,13 @@ table.ledger a:hover {
 	color: #666;
 }
 
+.index-group {
+	margin-bottom: 1em;
+	line-height: 2;
+}
 label {
 	margin-left: 1ex;
+	white-space: nowrap;
 }
 
 @media screen {

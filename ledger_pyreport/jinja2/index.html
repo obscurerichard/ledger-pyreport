@@ -21,7 +21,7 @@
 {% block title %}ledger-pyreport{% endblock %}
 
 {% block body %}
-	<div style="margin-bottom: 1em;">
+	<div class="index-group">
 		<form action="{{ url_for('trial') }}">
 			<button type="submit">Trial balance</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
@@ -31,7 +31,7 @@
 		</form>
 	</div>
 	
-	<div style="margin-bottom: 1em;">
+	<div class="index-group">
 		<form action="{{ url_for('balance') }}">
 			<button type="submit">Balance sheet</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
@@ -41,7 +41,7 @@
 		</form>
 	</div>
 	
-	<div style="margin-bottom: 1em;">
+	<div class="index-group">
 		<form action="{{ url_for('pandl') }}">
 			<button type="submit">Income statement</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
@@ -56,7 +56,7 @@
 		</form>
 	</div>
 	
-	<div style="margin-bottom: 1em;">
+	<div class="index-group">
 		<form action="{{ url_for('cashflow') }}">
 			<button type="submit">Cash flows</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
@@ -69,7 +69,7 @@
 		</form>
 	</div>
 	
-	<div style="margin-bottom: 1em;">
+	<div class="index-group">
 		<form action="{{ url_for('transactions') }}">
 			<button type="submit">General ledger</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
