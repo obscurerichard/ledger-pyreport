@@ -18,6 +18,7 @@
 
 body {
 	font-family: 'TeX Gyre Termes', 'Nimbus Roman', 'Times New Roman', 'Liberation Serif', Times, serif;
+	padding: 2em;
 }
 
 /* Tables */
@@ -119,12 +120,6 @@ label {
 .toast.visible {
 	opacity: 100%;
 	transition: opacity 0s;
-}
-
-@media screen {
-	body {
-		padding: 2em;
-	}
 }
 
 @media print {
