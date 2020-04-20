@@ -33,17 +33,17 @@ See [https://yingtongli.me/blog/2020/03/31/ledger-pyreport.html](https://yington
 Install the dependencies from PyPI, optionally in a virtual environment: (Commands presented for Linux/Mac)
 
 ```
-virtualenv venv
+virtualenv -p python3 venv
 . venv/bin/activate
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
-Copy *config.example.yml* to *config.yml* (or set the *LEDGER_PYREPORT_CONFIG* environment variable to the path to the config file).
+Copy *config.example.yml* to *config.yml* (or set the *LEDGER_PYREPORT_CONFIG* environment variable to the path to the config file). Edit as required, in particular setting the path of the Ledger journal file, reporting currency and any required Ledger arguments.
 
 Run as per a usual Flask app, for example:
 
 ```
-FLASK_APP=ledger_pyreport python -m flask run
+FLASK_APP=ledger_pyreport python3 -m flask run
 ```
 
 ## Notes on Ledger setup
