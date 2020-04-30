@@ -48,7 +48,7 @@
 		{# Profit and loss #}
 		<tr>
 			<th></th>
-			{% for cashflow in cashflows %}<th class="h2">{{ cashflow.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			{% for cashflow in cashflows %}<th class="h2">{{ cashflow.label }}&nbsp;</th>{% endfor %}
 		</tr>
 		<tr>
 			<td>Total Comprehensive Income</td>

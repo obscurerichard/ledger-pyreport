@@ -43,7 +43,7 @@
 		{% if year_headers %}
 			{# CSS hackery to centre-align the heading #}
 			<th class="h1" style="padding-left: calc(2px + {{ pandls|length * 6 }}em);">{{ label }}</th>
-			{% for pandl in pandls %}<th class="h2">{{ pandl.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			{% for pandl in pandls %}<th class="h2">{{ pandl.label }}&nbsp;</th>{% endfor %}
 		{% else %}
 			<th class="h1" colspan="{{ pandls|length + 1 }}">{{ label }}</th>
 		{% endif %}
@@ -77,7 +77,7 @@
 				<tr>
 					{% if loop.first %}
 						<th class="h2">{{ acc_income.bits[-1] }} Income</th>
-						{% for pandl in pandls %}<th class="h2">{{ pandl.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+						{% for pandl in pandls %}<th class="h2">{{ pandl.label }}&nbsp;</th>{% endfor %}
 					{% else %}
 						<th class="h2" colspan="{{ pandls|length + 1 }}">{{ acc_income.bits[-1] }} Income</th>
 					{% endif %}

@@ -355,10 +355,11 @@ class Commodity:
 		return Commodity(self.name, self.is_prefix)
 
 class TrialBalance:
-	def __init__(self, ledger, date, pstart):
+	def __init__(self, ledger, date, pstart, label=None):
 		self.ledger = ledger
 		self.date = date
 		self.pstart = pstart
+		self.label = label
 		
 		self.balances = {}
 	

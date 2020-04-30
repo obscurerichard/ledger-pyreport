@@ -27,7 +27,7 @@
 	<table class="ledger onedesc">
 		<tr>
 			<th></th>
-			{% for trial_balance in trial_balances %}<th class="h2">{{ trial_balance.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+			{% for trial_balance in trial_balances %}<th class="h2">{{ trial_balance.label }}</th>{% endfor %}
 		</tr>
 		{% for account in accounts %}
 			<tr>

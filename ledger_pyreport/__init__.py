@@ -19,6 +19,7 @@ from . import ledger
 from .config import config
 from .model import *
 
+import calendar
 from datetime import datetime, timedelta
 from decimal import Decimal
 import flask
@@ -33,11 +34,58 @@ def index():
 	
 	return flask.render_template('index.html', date=date, pstart=pstart)
 
+def make_period(pstart, date, compare, cmp_period):
+	pstarts = []
+	dates = []
+	labels = []
+	
+	for i in range(0, compare + 1):
+		if cmp_period == 'period':
+			date2 = date.replace(year=date.year - i)
+			pstarts.append(pstart.replace(year=pstart.year - i))
+			dates.append(date2)
+			labels.append(date2.strftime('%Y'))
+		elif cmp_period == 'month':
+			pstart2 = pstart
+			date2 = date
+			
+			for _ in range(i):
+				# Go backward one month
+				pstart2 = pstart2.replace(day=1) - timedelta(days=1)
+				date2 = date2.replace(day=1) - timedelta(days=1)
+			
+			pstart2 = pstart2.replace(day=pstart.day)
+			
+			# Is this the last day of the month?
+			is_last = calendar.monthrange(date.year, date.month)[1] == date.day
+			if is_last:
+				date2 = date2.replace(day=calendar.monthrange(date2.year, date2.month)[1])
+			else:
+				if date.day > calendar.monthrange(date.year, date.month)[1]:
+					date2 = date2.replace(day=calendar.monthrange(date2.year, date2.month)[1])
+				else:
+					date2 = date2.replace(day=date.day)
+			
+			pstarts.append(pstart2)
+			dates.append(date2)
+			labels.append(date2.strftime('%b %Y'))
+	
+	return pstarts, dates, labels
+
+def describe_period(date_end, date_beg):
+	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
+		return 'year ended {}'.format(date_end.strftime('%d %B %Y'))
+	elif date_beg == ledger.financial_year(date_end):
+		return 'financial year to {}'.format(date_end.strftime('%d %B %Y'))
+	else:
+		return 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
+
 @app.route('/trial')
 def trial():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
-	compare = int(flask.request.args['compare'])
+	compare = int(flask.request.args.get('compare', '0'))
+	cmp_period = flask.request.args.get('cmpperiod', 'period')
 	cash = flask.request.args.get('cash', False)
 	
 	if compare == 0:
@@ -66,14 +114,13 @@ def trial():
 		return flask.render_template('trial.html', date=date, pstart=pstart, trial_balance=trial_balance, accounts=accounts, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity)
 	else:
 		# Get multiple trial balances for comparison
-		dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
-		pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
+		pstarts, dates, labels = make_period(pstart, date, compare, cmp_period)
 		
 		l = ledger.raw_transactions_at_date(date)
 		report_commodity = l.get_commodity(config['report_commodity'])
 		if cash:
 			l = accounting.ledger_to_cash(l, report_commodity)
-		trial_balances = [accounting.trial_balance(l.clone(), d, p, report_commodity) for d, p in zip(dates, pstarts)]
+		trial_balances = [accounting.trial_balance(l.clone(), d, p, report_commodity, label=lbl) for d, p, lbl in zip(dates, pstarts, labels)]
 		
 		# Identify which accounts have transactions in which periods
 		accounts = sorted(l.accounts.values(), key=lambda a: a.name)
@@ -91,17 +138,17 @@ def trial():
 def balance():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
-	compare = int(flask.request.args['compare'])
+	compare = int(flask.request.args.get('compare', '0'))
+	cmp_period = flask.request.args.get('cmpperiod', 'period')
 	cash = flask.request.args.get('cash', False)
 	
-	dates = [date.replace(year=date.year - i) for i in range(0, compare + 1)]
-	pstarts = [pstart.replace(year=pstart.year - i) for i in range(0, compare + 1)]
+	pstarts, dates, labels = make_period(pstart, date, compare, cmp_period)
 	
 	l = ledger.raw_transactions_at_date(date)
 	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
-	balance_sheets = [accounting.balance_sheet(accounting.trial_balance(l.clone(), d, p, report_commodity)) for d, p in zip(dates, pstarts)]
+	balance_sheets = [accounting.balance_sheet(accounting.trial_balance(l.clone(), d, p, report_commodity, label=lbl)) for d, p, lbl in zip(dates, pstarts, labels)]
 	
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())
@@ -111,30 +158,22 @@ def balance():
 	
 	return flask.render_template('balance.html', ledger=l, balance_sheets=balance_sheets, accounts=accounts, config=config, report_commodity=report_commodity, cash=cash)
 
-def describe_period(date_end, date_beg):
-	if date_end == (date_beg.replace(year=date_beg.year + 1) - timedelta(days=1)):
-		return 'year ended {}'.format(date_end.strftime('%d %B %Y'))
-	elif date_beg == ledger.financial_year(date_end):
-		return 'financial year to {}'.format(date_end.strftime('%d %B %Y'))
-	else:
-		return 'period from {} to {}'.format(date_beg.strftime('%d %B %Y'), date_end.strftime('%d %B %Y'))
-
 @app.route('/pandl')
 def pandl():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
-	compare = int(flask.request.args['compare'])
+	compare = int(flask.request.args.get('compare', '0'))
+	cmp_period = flask.request.args.get('cmpperiod', 'period')
 	cash = flask.request.args.get('cash', False)
-	scope = flask.request.args['scope']
+	scope = flask.request.args.get('scope', 'pandl')
 	
-	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
-	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
+	dates_beg, dates_end, labels = make_period(date_beg, date_end, compare, cmp_period)
 	
 	l = ledger.raw_transactions_at_date(date_end)
 	report_commodity = l.get_commodity(config['report_commodity'])
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
-	pandls = [accounting.trial_balance(l.clone(), de, db, report_commodity) for de, db in zip(dates_end, dates_beg)]
+	pandls = [accounting.trial_balance(l.clone(), de, db, report_commodity, label=lbl) for de, db, lbl in zip(dates_end, dates_beg, labels)]
 	
 	# Process separate P&L accounts
 	separate_pandls = []
@@ -170,11 +209,11 @@ def pandl():
 def cashflow():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
-	compare = int(flask.request.args['compare'])
+	compare = int(flask.request.args.get('compare', '0'))
+	cmp_period = flask.request.args.get('cmpperiod', 'period')
 	method = flask.request.args['method']
 	
-	dates_beg = [date_beg.replace(year=date_beg.year - i) for i in range(0, compare + 1)]
-	dates_end = [date_end.replace(year=date_end.year - i) for i in range(0, compare + 1)]
+	dates_beg, dates_end, labels = make_period(date_beg, date_end, compare, cmp_period)
 	
 	l = ledger.raw_transactions_at_date(date_end)
 	report_commodity = l.get_commodity(config['report_commodity'])
@@ -186,7 +225,7 @@ def cashflow():
 	closing_balances = []
 	cashflows = []
 	profits = []
-	for de, db in zip(dates_end, dates_beg):
+	for de, db, lbl in zip(dates_end, dates_beg, labels):
 		tb = accounting.trial_balance(l.clone(), db - timedelta(days=1), db, report_commodity)
 		opening_balances.append(sum((tb.get_balance(a) for a in cash_accounts), Balance()).exchange(report_commodity, True))
 		
@@ -195,14 +234,14 @@ def cashflow():
 		
 		if method == 'direct':
 			# Determine transactions affecting cash assets
-			cashflows.append(accounting.account_flows(tb.ledger, de, db, cash_accounts, True))
+			cashflows.append(accounting.account_flows(tb.ledger, de, db, cash_accounts, True, label=lbl))
 		else:
 			# Determine net profit (loss)
 			profits.append(-(tb.get_total(tb.ledger.get_account(config['income_account'])) + tb.get_total(tb.ledger.get_account(config['expenses_account'])) + tb.get_total(tb.ledger.get_account(config['oci_account']))).exchange(report_commodity, True))
 			
 			# Determine transactions affecting equity, liabilities and non-cash assets
 			noncash_accounts = [a for a in l.accounts.values() if a.is_equity or a.is_liability or (a.is_asset and not a.is_cash)]
-			cashflows.append(accounting.account_flows(tb.ledger, de, db, noncash_accounts, False))
+			cashflows.append(accounting.account_flows(tb.ledger, de, db, noncash_accounts, False, label=lbl))
 	
 	# Delete accounts with always zero balances
 	accounts = list(l.accounts.values())

@@ -26,7 +26,13 @@
 			<button type="submit">Trial balance</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>Period start: <input name="pstart" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			<label>
+				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
+				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
+					<option value="period" selected>periods</option>
+					<option value="month">months</option>
+				</select>
+			</label>
 			<label><input name="cash" data-inputgroup="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>
 		</form>
 	</div>
@@ -36,7 +42,13 @@
 			<button type="submit">Balance sheet</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>Period start: <input name="pstart" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			<label>
+				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
+				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
+					<option value="period" selected>periods</option>
+					<option value="month">months</option>
+				</select>
+			</label>
 			<label><input name="cash" data-inputgroup="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>
 		</form>
 	</div>
@@ -46,7 +58,13 @@
 			<button type="submit">Income statement</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			<label>
+				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
+				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
+					<option value="period" selected>periods</option>
+					<option value="month">months</option>
+				</select>
+			</label>
 			<label><input name="cash" data-inputgroup="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>
 			<label>Scope: <select name="scope">
 				<option value="pandl" selected>P&L only</option>
@@ -61,7 +79,13 @@
 			<button type="submit">Cash flows</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
-			<label>Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)"> periods</label>
+			<label>
+				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
+				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
+					<option value="period" selected>periods</option>
+					<option value="month">months</option>
+				</select>
+			</label>
 			<label>Method: <select name="method">
 				<option value="indirect" selected>Indirect</option>
 				<option value="direct">Direct</option>
@@ -90,6 +114,13 @@
 		function chbc(el) {
 			for (var e2 of document.querySelectorAll('input[data-inputgroup="' + el.dataset['inputgroup'] + '"]')) {
 				e2.checked = el.checked;
+			}
+		}
+		
+		// Ditto for dropdowns
+		function selc(el) {
+			for (var e2 of document.querySelectorAll('select[data-inputgroup="' + el.dataset['inputgroup'] + '"]')) {
+				e2.value = el.value;
 			}
 		}
 	</script>

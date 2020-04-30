@@ -62,7 +62,7 @@
 		<tr>
 			{% if loop.first and year_headers %}
 				<th class="h2">{{ account_class.bits[-1] }} {{ label }}</th>
-				{% for balance_sheet in balance_sheets %}<th class="h2">{{ balance_sheet.date.strftime('%Y') }}&nbsp;</th>{% endfor %}
+				{% for balance_sheet in balance_sheets %}<th class="h2">{{ balance_sheet.label }}&nbsp;</th>{% endfor %}
 			{% else %}
 				<th class="h2" colspan="{{ balance_sheets|length + 1 }}">{{ account_class.bits[-1] }} {{ label }}</th>
 			{% endif %}

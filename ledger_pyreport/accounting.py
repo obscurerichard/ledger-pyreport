@@ -23,8 +23,8 @@ from .model import *
 
 # Generate a trial balance
 # Perform closing of books based on specified dates
-def trial_balance_raw(ledger, date, pstart):
-	tb = TrialBalance(ledger, date, pstart)
+def trial_balance_raw(ledger, date, pstart, label=None):
+	tb = TrialBalance(ledger, date, pstart, label=label)
 	
 	for transaction in ledger.transactions:
 		if transaction.date > date:
@@ -41,8 +41,8 @@ def trial_balance_raw(ledger, date, pstart):
 	return tb
 
 # Trial balance with unrealized gains and OCI
-def trial_balance(ledger, date, pstart, commodity):
-	tb_date, r_date = _add_unrealized_gains(trial_balance_raw(ledger, date, pstart), commodity)
+def trial_balance(ledger, date, pstart, commodity, label=None):
+	tb_date, r_date = _add_unrealized_gains(trial_balance_raw(ledger, date, pstart, label=label), commodity)
 	tb_pstart, r_pstart = _add_unrealized_gains(trial_balance_raw(ledger, pstart - timedelta(days=1), pstart), commodity)
 	
 	for account in set(list(r_date.keys()) + list(r_pstart.keys())):
@@ -168,10 +168,10 @@ def ledger_to_cash(ledger, commodity):
 	return ledger
 
 # Summarise related transactions
-def account_flows(ledger, date, pstart, accounts, related):
+def account_flows(ledger, date, pstart, accounts, related, label=None):
 	transactions = [t for t in ledger.transactions if any(p.account in accounts for p in t.postings) and t.date <= date and t.date >= pstart]
 	
-	tb = TrialBalance(ledger, date, pstart)
+	tb = TrialBalance(ledger, date, pstart, label=label)
 	
 	for transaction in transactions:
 		for posting in transaction.postings:
