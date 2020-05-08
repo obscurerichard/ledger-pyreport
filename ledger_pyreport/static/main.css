@@ -44,6 +44,7 @@ table.ledger {
 
 table.ledger td, table.ledger th {
 	padding: 2px 2px 2px 2px;
+	vertical-align: top;
 }
 
 table.ledger th {
@@ -64,6 +65,13 @@ table.ledger tr.total:not(.explicit-rules) td {
 table.ledger.onedesc tr td:not(:first-child), table.ledger.onedesc tr th:not(:first-child) {
 	text-align: right;
 	width: 6em;
+}
+
+table.ledger tr.trn-first td {
+	padding-top: 1.5mm;
+}
+table.ledger tr.trn-last td {
+	padding-bottom: 1.5mm;
 }
 
 table.ledger a {

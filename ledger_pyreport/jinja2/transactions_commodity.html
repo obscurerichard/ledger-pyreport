@@ -41,7 +41,7 @@
 		{% set ns = namespace(balance=None) %}
 		{% set prevlink = '/transactions?' + {'date_end': (date_beg - timedelta(days=1)).strftime('%Y-%m-%d'), 'date_beg': date_beg.replace(year=date_beg.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode %}
 		{% for amount in opening_balance.amounts %}
-			<tr class="total">
+			<tr class="total{% if loop.first %} trn-first{% endif %}{% if loop.last %} trn-last{% endif %}">
 				<td>{% if loop.first %}<a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a>{% endif %}</td>
 				<td>{% if loop.first %}<a href="{{ prevlink }}">Opening Balance</a>{% endif %}</td>
 				<td></td>
@@ -51,7 +51,7 @@
 				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
 			</tr>
 		{% else %}
-			<tr class="total">
+			<tr class="total trn-first trn-last">
 				<td><a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a></td>
 				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
@@ -72,7 +72,7 @@
 			{% endfor %}
 			{% for amount in ns.balance.amounts %}
 				{% set posting = matching_posting(transaction, amount) %}
-				<tr{% if loop.first %} style="border-top: 1px solid black;"{% endif %}>
+				<tr{% if loop.first and loop.last %} class="trn-first trn-last"{% elif loop.first %} class="trn-first"{% elif loop.last %} class="trn-last"{% endif %}>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					{% if posting %}
@@ -89,7 +89,7 @@
 		{% endfor %}
 		
 		{% for amount in closing_balance.amounts %}
-			<tr class="total explicit-rules" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
+			<tr class="total explicit-rules{% if loop.first %} trn-first{% endif %}{% if loop.last %} trn-last{% endif %}" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
 				<td>{% if loop.first %}{{ date_end.strftime('%Y-%m-%d') }}{% endif %}</td>
 				<td>{% if loop.first %}Closing Balance{% endif %}</td>
 				<td></td>
@@ -100,7 +100,7 @@
 			</tr>
 		{% endfor %}
 		
-		<tr class="total">
+		<tr class="total trn-first trn-last">
 			<td></td>
 			<td></td>
 			<td></td>

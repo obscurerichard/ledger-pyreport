@@ -47,7 +47,7 @@
 		{% set ns = namespace(balance=None) %}
 		{% if account %}
 			{% set prevlink = '/transactions?' + {'date_end': (date_beg - timedelta(days=1)).strftime('%Y-%m-%d'), 'date_beg': date_beg.replace(year=date_beg.year-1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
-			<tr class="total">
+			<tr class="total trn-first trn-last">
 				<td><a href="{{ prevlink }}">{{ date_beg.strftime('%Y-%m-%d') }}</a></td>
 				<td><a href="{{ prevlink }}">Opening Balance</a></td>
 				<td></td>
@@ -70,7 +70,7 @@
 			{% for posting in transaction.postings if posting.account != account %}
 				{% set amount = posting.exchange(report_commodity, transaction.date) %}
 				{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
-				<tr>
+				<tr{% if loop.first and loop.last %} class="trn-first trn-last"{% elif loop.first %} class="trn-first"{% elif loop.last %} class="trn-last"{% endif %}>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
 					<td><a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': posting.account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
@@ -97,7 +97,7 @@
 		{% endfor %}
 		
 		{% if account %}
-			<tr class="total">
+			<tr class="total trn-first trn-last">
 				<td>{{ date_end.strftime('%Y-%m-%d') }}</td>
 				<td>Closing Balance</td>
 				<td></td>
@@ -112,7 +112,7 @@
 				</td>
 			</tr>
 		{% else %}
-			<tr class="total">
+			<tr class="total trn-first trn-last">
 				<td>{{ date_end.strftime('%Y-%m-%d') }}</td>
 				<td>Total</td>
 				<td></td>
