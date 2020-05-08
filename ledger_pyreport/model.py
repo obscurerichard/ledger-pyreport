@@ -82,6 +82,10 @@ class Transaction:
 		for posting in self.postings:
 			result.append('    {}  {}'.format(posting.account.name, posting.amount.tostr(False)))
 		return '\n'.join(result)
+	
+	@property
+	def has_comment_detail(self):
+		return any(p.comment for p in self.postings)
 
 class Posting:
 	class State(Enum):

@@ -67,12 +67,38 @@
 		{% endif %}
 		
 		{% for transaction in transactions %}
+			{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
+
+			{% if transaction.has_comment_detail %}
+				<tr class="trn-first">
+					<td>{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}</td>
+					<td>{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}</td>
+					<td></td>
+					{% if account %}
+						<td></td>
+						<td></td>
+						<td></td>
+					{% else %}
+						<td></td>
+						<td></td>
+					{% endif %}
+				</tr>
+			{% endif %}
+			
 			{% for posting in transaction.postings if posting.account != account %}
 				{% set amount = posting.exchange(report_commodity, transaction.date) %}
-				{% set trn_url = '/transaction?' + {'tid': transaction.id, 'cash': 'on' if cash else ''}|urlencode %}
-				<tr{% if loop.first and loop.last %} class="trn-first trn-last"{% elif loop.first %} class="trn-first"{% elif loop.last %} class="trn-last"{% endif %}>
-					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
-					<td>{% if loop.first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
+				{% set trn_first = not transaction.has_comment_detail and loop.first %}
+				{% set trn_last = loop.last %}
+				
+				<tr{% if trn_first and trn_last %} class="trn-first trn-last"{% elif trn_first %} class="trn-first"{% elif trn_last %} class="trn-last"{% endif %}>
+					<td>{% if trn_first %}{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.date.strftime('%Y-%m-%d') }}{% if transaction.id %}</a>{% endif %}{% endif %}</td>
+					{% if trn_first %}
+						<td>{% if transaction.id %}<a href="{{ trn_url }}">{% endif %}{{ transaction.description }}{% if transaction.id %}</a>{% endif %}</td>
+					{% elif transaction.has_comment_detail and posting.comment %}
+						<td style="padding-left: 1.5em;">{{ posting.comment }}</td>
+					{% else %}
+						<td></td>
+					{% endif %}
 					<td><a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': posting.account.name, 'cash': 'on' if cash else ''}|urlencode }}">{{ (posting.account.name|e).__str__().replace(':', ':<wbr>')|safe }}</a></td>
 					{% if account %}
 						{# Reverse Dr/Cr so it's from the "perspective" of this account #}
