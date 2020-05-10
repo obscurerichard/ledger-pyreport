@@ -271,10 +271,14 @@ class Balance:
 	def __init__(self, amounts=None):
 		self.amounts = amounts or []
 	
-	def tidy(self):
+	def strip_prices(self):
 		new_amounts = []
 		for amount in self.amounts:
-			new_amount = next((a for a in new_amounts if a.commodity == amount.commodity), None)
+			new_amount = next((a for a in new_amounts if a.commodity.name == amount.commodity.name), None)
+			if new_amount is None:
+				new_amounts.append(Amount(amount.amount, amount.commodity.strip_price()))
+			else:
+				new_amount.amount += amount.amount
 		return Balance(new_amounts)
 	
 	def clean(self):

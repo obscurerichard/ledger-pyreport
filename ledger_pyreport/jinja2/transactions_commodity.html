@@ -100,6 +100,18 @@
 			</tr>
 		{% endfor %}
 		
+		{% for amount in closing_balance.strip_prices().amounts %}
+			<tr class="total explicit-rules{% if loop.first %} trn-first{% endif %}{% if loop.last %} trn-last{% endif %}" style="{% if loop.first %}border-top: 1pt solid black;{% endif %}{% if loop.last %}border-bottom: 1pt solid black;{% endif %}">
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				{{ amount|abs|bt(True) }}
+				<td>{% if amount >= 0 %}Dr{% else %}Cr{% endif %}</td>
+			</tr>
+		{% endfor %}
+		
 		<tr class="total trn-first trn-last">
 			<td></td>
 			<td></td>
