@@ -54,6 +54,10 @@ table.ledger th.h1 {
 	text-align: center;
 }
 
+table.ledger tr:hover {
+	background-color: #eee;
+}
+
 table.ledger tr.total td {
 	font-weight: bold;
 }
