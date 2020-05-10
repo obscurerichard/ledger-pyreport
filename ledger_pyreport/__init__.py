@@ -387,22 +387,6 @@ def filter_commodity_table_positive(amt, show_price, link=None):
 
 # Debug views
 
-@app.route('/debug/noncash_transactions')
-def debug_noncash_transactions():
-	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
-	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
-	account = flask.request.args.get('account')
-	
-	l = ledger.raw_transactions_at_date(date)
-	report_commodity = l.get_commodity(config['report_commodity'])
-	account = l.get_account(account)
-	
-	transactions = [t for t in l.transactions if any(p.account == account for p in t.postings)]
-	
-	accounting.account_to_cash(account, report_commodity)
-	
-	return flask.render_template('debug_noncash_transactions.html', date=date, pstart=pstart, period=describe_period(date, pstart), account=account, ledger=l, transactions=transactions, report_commodity=report_commodity)
-
 @app.route('/debug/imbalances')
 def debug_imbalances():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
