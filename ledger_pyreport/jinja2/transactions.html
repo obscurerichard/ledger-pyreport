@@ -83,6 +83,20 @@
 						<td></td>
 					{% endif %}
 				</tr>
+				
+				{# This account's comment #}
+				{% if account %}
+					{% for posting in transaction.postings if posting.account == account and posting.comment %}
+						<tr>
+							<td></td>
+							<td style="padding-left: 0.75em;">{{ posting.comment }}</td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					{% endfor %}
+				{% endif %}
 			{% endif %}
 			
 			{% for posting in transaction.postings if posting.account != account %}
