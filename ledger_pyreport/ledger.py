@@ -63,12 +63,12 @@ def parse_amount(amount):
 	if amount_str[0] in list('0123456789-'):
 		# Commodity follows number
 		bits = amount_str.split()
-		amount_num = Decimal(bits[0])
+		amount_num = Decimal(bits[0].replace(',', ''))
 		commodity = Commodity(bits[1].strip('"'), False)
 	else:
 		# Commodity precedes number
 		commodity = Commodity(amount_str[0], True)
-		amount_num = Decimal(amount_str[1:])
+		amount_num = Decimal(amount_str[1:].replace(',', ''))
 	
 	if price_str:
 		commodity.price = parse_amount(price_str)
