@@ -65,12 +65,13 @@ class Ledger:
 		return max(prices, key=lambda p: p[0])[2]
 
 class Transaction:
-	def __init__(self, ledger, id, date, description, code=None):
+	def __init__(self, ledger, id, date, description, code=None, uuid=None):
 		self.ledger = ledger
 		self.id = id
 		self.date = date
 		self.description = description
 		self.code = code
+		self.uuid = uuid
 		
 		self.postings = []
 	

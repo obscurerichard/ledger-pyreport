@@ -20,6 +20,7 @@ from .model import *
 import csv
 from datetime import datetime, timedelta
 from decimal import Decimal
+import hashlib
 import re
 import subprocess
 
@@ -92,11 +93,24 @@ def raw_transactions_at_date(date):
 	
 	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment)),%(quoted(state))\n')
 	
+	uuids = set()
+	
 	reader = csv.reader(output.splitlines(), dialect='ledger')
 	for trn_id, date_str, code, payee, account_str, amount_str, comment, state_str in reader:
 		if not ledger.transactions or trn_id != ledger.transactions[-1].id:
-			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code=code)
+			if trn_id in uuids:
+				digest = hashlib.sha256()
+				digest.update(trn_id.encode('utf-8'))
+				digest.update(date_str.encode('utf-8'))
+				digest.update(payee.encode('utf-8'))
+				uuid = digest.hexdigest()
+			else:
+				uuid = trn_id
+			
+			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code=code, uuid=uuid)
 			ledger.transactions.append(transaction)
+			
+			uuids.add(uuid)
 		else:
 			# Transaction ID matches: continuation of previous transaction
 			transaction = ledger.transactions[-1]

@@ -304,7 +304,7 @@ def transactions():
 
 @app.route('/transaction')
 def transaction():
-	tid = flask.request.args['tid']
+	uuid = flask.request.args['uuid']
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
 	
@@ -314,7 +314,7 @@ def transaction():
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	
-	transaction = next((t for t in l.transactions if str(t.id) == tid))
+	transaction = next((t for t in l.transactions if str(t.uuid) == uuid))
 	
 	if commodity:
 		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).clean()
