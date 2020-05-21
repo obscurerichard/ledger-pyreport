@@ -22,7 +22,7 @@
 
 {% block links %}
 	{{ super() }}
-	<a href="/transaction?{{ {'tid': transaction.id, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>
+	<a href="/transaction?{{ {'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>
 {% endblock %}
 
 {% block report %}
