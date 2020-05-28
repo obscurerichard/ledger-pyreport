@@ -40,7 +40,7 @@ def make_period(pstart, date, compare, cmp_period):
 	labels = []
 	
 	for i in range(0, compare + 1):
-		if cmp_period == 'period':
+		if cmp_period == 'year':
 			date2 = date.replace(year=date.year - i)
 			pstarts.append(pstart.replace(year=pstart.year - i))
 			dates.append(date2)
@@ -85,7 +85,7 @@ def trial():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	compare = int(flask.request.args.get('compare', '0'))
-	cmp_period = flask.request.args.get('cmpperiod', 'period')
+	cmp_period = flask.request.args.get('cmpperiod', 'year')
 	cash = flask.request.args.get('cash', False)
 	
 	if compare == 0:
@@ -139,7 +139,7 @@ def balance():
 	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
 	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	compare = int(flask.request.args.get('compare', '0'))
-	cmp_period = flask.request.args.get('cmpperiod', 'period')
+	cmp_period = flask.request.args.get('cmpperiod', 'year')
 	cash = flask.request.args.get('cash', False)
 	
 	pstarts, dates, labels = make_period(pstart, date, compare, cmp_period)
@@ -163,7 +163,7 @@ def pandl():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	compare = int(flask.request.args.get('compare', '0'))
-	cmp_period = flask.request.args.get('cmpperiod', 'period')
+	cmp_period = flask.request.args.get('cmpperiod', 'year')
 	cash = flask.request.args.get('cash', False)
 	scope = flask.request.args.get('scope', 'pandl')
 	
@@ -210,7 +210,7 @@ def cashflow():
 	date_beg = datetime.strptime(flask.request.args['date_beg'], '%Y-%m-%d')
 	date_end = datetime.strptime(flask.request.args['date_end'], '%Y-%m-%d')
 	compare = int(flask.request.args.get('compare', '0'))
-	cmp_period = flask.request.args.get('cmpperiod', 'period')
+	cmp_period = flask.request.args.get('cmpperiod', 'year')
 	method = flask.request.args['method']
 	
 	dates_beg, dates_end, labels = make_period(date_beg, date_end, compare, cmp_period)

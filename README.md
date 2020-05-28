@@ -56,6 +56,18 @@ Ledger-pyreport by default observes the convention that positive amounts in Ledg
 
 A commodity which has *any* price data in Ledger (including those specified through `@` or `@@`, or explicitly through `P`) will be regarded as a commodity measured at fair market value, and automatically revalued accordingly. A commodity which has *no* price data in Ledger (i.e. lot prices through `{…}` or `{{…}}` only) will be regarded as a commodity measured at historical cost, and will not be subsequently revalued.
 
+## Comparative statements
+
+ledger-pyreport can be used to produce comparative statements, for example ‘compare *n* years’ or ‘compare *n* months’.
+
+The dates in the ‘date’ and ‘period start’ fields represent the most recent period. These two fields are then advanced backwards in increments of the specified time interval to determine dates for the preceding periods.
+
+However, if the interval is set to ‘months’, and the ‘date’ is the last day of a calendar month, then preceding dates will also be set to the last day of each preceding calendar month.
+
+Example 1: Setting a date of 2019-10-31 and period start of 2019-07-01 with ‘compare *n* years’ will generate *year to date* comparisons as at 31 October of each year. To generate year end comparisons, set a date of 2020-06-30 with period start 2019-07-01.
+
+Example 2: Setting a date of 2019-10-31 and period start of 2019-07-01 with ‘compare *n* months’ will compare the *overlapping* 4-month periods Jul–Oct, Jun–Sep, May–Aug, etc. To instead compare calendar months, set a date of 2019-10-31 with period start 2019-10-01.
+
 ## Caution on standards compliance
 
 ledger-pyreport is developed with reference to the [AASB Australian Accounting Standards](https://www.aasb.gov.au/Pronouncements/Current-standards.aspx) and [IFRS International Financial Reporting Standards](https://www.ifrs.org/issued-standards/list-of-standards/), and we prefer compliance with those standards whenever practical. (We do not specifically consider United States FASB GAAP compliance.)
