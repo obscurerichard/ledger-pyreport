@@ -19,6 +19,7 @@ from .config import config
 from decimal import Decimal
 from enum import Enum
 import functools
+import itertools
 
 class Ledger:
 	def __init__(self, date):
@@ -78,6 +79,10 @@ class Transaction:
 	def __repr__(self):
 		return '<Transaction {} "{}">'.format(self.id, self.description)
 	
+	@property
+	def has_comment_detail(self):
+		return any(p.comment for p in self.postings)
+	
 	def describe(self):
 		result = ['{:%Y-%m-%d} {}'.format(self.date, self.description)]
 		for posting in self.postings:
@@ -89,9 +94,16 @@ class Transaction:
 		result.postings = [Posting(p.transaction, p.account, -p.amount, p.comment, p.state) for p in self.postings]
 		return result
 	
-	@property
-	def has_comment_detail(self):
-		return any(p.comment for p in self.postings)
+	def exchange(self, commodity):
+		result = Transaction(self.ledger, self.id, self.date, self.description, self.code, self.uuid)
+		
+		# Combine like postings
+		for k, g in itertools.groupby(self.postings, key=lambda p: (p.account, p.comment, p.state)):
+			account, comment, state = k
+			posting = Posting(result, account, sum(p.exchange(commodity).amount for p in g), comment, state)
+			result.postings.append(posting)
+		
+		return result
 
 class Posting:
 	class State(Enum):
@@ -109,11 +121,11 @@ class Posting:
 	def __repr__(self):
 		return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
 	
-	def exchange(self, commodity, date):
+	def exchange(self, commodity):
 		if self.amount.commodity.name == commodity.name:
-			return Amount(self.amount)
+			return self
 		
-		return self.amount.exchange(commodity, True) # Cost basis
+		return Posting(self.transaction, self.account, self.amount.exchange(commodity, True), self.comment, self.state) # Cost basis
 
 class Account:
 	def __init__(self, ledger, name):
