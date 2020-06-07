@@ -84,6 +84,11 @@ class Transaction:
 			result.append('    {}  {}'.format(posting.account.name, posting.amount.tostr(False)))
 		return '\n'.join(result)
 	
+	def reverse(self, id, date, description, code=None, uuid=None):
+		result = Transaction(self.ledger, id, date, description, code, uuid)
+		result.postings = [Posting(p.transaction, p.account, -p.amount, p.comment, p.state) for p in self.postings]
+		return result
+	
 	@property
 	def has_comment_detail(self):
 		return any(p.comment for p in self.postings)

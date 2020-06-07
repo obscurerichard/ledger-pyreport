@@ -47,19 +47,22 @@ def trial_balance(ledger, date, pstart, commodity, label=None):
 	
 	for account in set(list(r_date.keys()) + list(r_pstart.keys())):
 		if account in r_pstart:
-			# Charge previous unrealized gains to Accumulated OCI
-			#r_pstart[account].postings[1].account = ledger.get_account(config['accumulated_oci'])
-			accumulated = r_pstart[account].postings[0].amount
+			tb_date.balances[account.name] = tb_date.get_balance(account) + r_pstart[account].postings[0].amount
+			if r_pstart[account].postings[1].account.is_income or r_pstart[account].postings[1].account.is_expense:
+				tb_date.balances[config['retained_earnings']] = tb_date.get_balance(ledger.get_account(config['retained_earnings'])) - r_pstart[account].postings[0].amount
+			elif r_pstart[account].postings[1].account.is_oci:
+				tb_date.balances[config['accumulated_oci']] = tb_date.get_balance(ledger.get_account(config['accumulated_oci'])) - r_pstart[account].postings[0].amount
+			else:
+				tb_date.balances[config['unrealized_gains']] = tb_date.get_balance(ledger.get_account(config['accumulated_oci'])) - r_pstart[account].postings[0].amount
 			
-			tb_date.balances[account.name] = tb_date.get_balance(account) + accumulated
-			tb_date.balances[config['accumulated_oci']] = tb_date.get_balance(ledger.get_account(config['accumulated_oci'])) - accumulated
+			# Reversing entry
+			trn_reversal = r_pstart[account].reverse(None, pstart, '<Reversal of Unrealized Gains>')
+			ledger.transactions.insert(0, trn_reversal)
+			
+			tb_date.balances[account.name] = tb_date.get_balance(account) + trn_reversal.postings[0].amount
+			tb_date.balances[config['unrealized_gains']] = tb_date.get_balance(ledger.get_account(config['unrealized_gains'])) - trn_reversal.postings[0].amount
 		
 		if account in r_date:
-			if account in r_pstart:
-				# Adjust for this year's unrealized gains only
-				r_date[account].postings[0].amount -= accumulated
-				r_date[account].postings[1].amount += accumulated
-			
 			tb_date.balances[account.name] = tb_date.get_balance(account) + r_date[account].postings[0].amount
 			tb_date.balances[config['unrealized_gains']] = tb_date.get_balance(ledger.get_account(config['unrealized_gains'])) - r_date[account].postings[0].amount
 	

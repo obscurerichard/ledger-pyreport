@@ -56,6 +56,8 @@ Ledger-pyreport by default observes the convention that positive amounts in Ledg
 
 A commodity which has *any* price data in Ledger (including those specified through `@` or `@@`, or explicitly through `P`) will be regarded as a commodity measured at fair market value, and automatically revalued accordingly. A commodity which has *no* price data in Ledger (i.e. lot prices through `{…}` or `{{…}}` only) will be regarded as a commodity measured at historical cost, and will not be subsequently revalued.
 
+In accordance with accrual accounting, unrealised gains are charged to the Unrealized Gains income/expense account shown in *config.yml* in the period in which they occur. Subsequent realisations of those gains should be charged against the Unrealized Gains account within the Ledger journal. Alternatively, if charged to a different account (e.g. a realised Capital Gains income account), note that the Unrealized Gains account will contain a *contra* balance corresponding to previous years gains which are now realised.
+
 ## Comparative statements
 
 ledger-pyreport can be used to produce comparative statements, for example ‘compare *n* years’ or ‘compare *n* months’.
