@@ -304,6 +304,8 @@ def transactions():
 
 @app.route('/transaction')
 def transaction():
+	date = datetime.strptime(flask.request.args['date'], '%Y-%m-%d')
+	pstart = datetime.strptime(flask.request.args['pstart'], '%Y-%m-%d')
 	uuid = flask.request.args['uuid']
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
@@ -314,17 +316,19 @@ def transaction():
 	if cash:
 		l = accounting.ledger_to_cash(l, report_commodity)
 	
+	l = accounting.trial_balance(l, date, pstart, report_commodity).ledger
+	
 	transaction = next((t for t in l.transactions if str(t.uuid) == uuid))
 	
 	if commodity:
 		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).clean()
 		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).clean()
 		totals = itertools.zip_longest(total_dr.amounts, total_cr.amounts)
-		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, totals=totals, total_dr=total_dr.exchange(report_commodity, True), total_cr=total_cr.exchange(report_commodity, True), report_commodity=report_commodity, cash=cash)
+		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, totals=totals, total_dr=total_dr.exchange(report_commodity, True), total_cr=total_cr.exchange(report_commodity, True), report_commodity=report_commodity, cash=cash, date=date, pstart=pstart)
 	else:
 		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).exchange(report_commodity, True)
 		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).exchange(report_commodity, True)
-		return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity, cash=cash)
+		return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity, cash=cash, date=date, pstart=pstart)
 
 # Template filters
 

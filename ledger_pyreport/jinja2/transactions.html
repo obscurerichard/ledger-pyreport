@@ -67,7 +67,7 @@
 		{% endif %}
 		
 		{% for transaction in transactions %}
-			{% set trn_url = '/transaction?' + {'uuid': transaction.uuid, 'cash': 'on' if cash else ''}|urlencode %}
+			{% set trn_url = '/transaction?' + {'date': date_end.strftime('%Y-%m-%d'), 'pstart': date_beg.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else ''}|urlencode %}
 
 			{% if transaction.has_comment_detail %}
 				<tr class="trn-first">

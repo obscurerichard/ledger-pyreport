@@ -66,7 +66,7 @@
 		{% set ns.balance = opening_balance %}
 		
 		{% for transaction in transactions %}
-			{% set trn_url = '/transaction?' + {'uuid': transaction.uuid, 'cash': 'on' if cash else ''}|urlencode %}
+			{% set trn_url = '/transaction?' + {'date': date_end.strftime('%Y-%m-%d'), 'pstart': date_beg.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else ''}|urlencode %}
 			{% for posting in transaction.postings if posting.account == account %}
 				{% set ns.balance = ns.balance + posting.amount %}
 			{% endfor %}
