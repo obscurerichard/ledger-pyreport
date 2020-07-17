@@ -25,6 +25,7 @@
 		<form action="{{ url_for('trial') }}">
 			<button type="submit">Trial balance</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<button class="fy-btn">FY</button>
 			<label>Period start: <input name="pstart" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>
 				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
@@ -41,6 +42,7 @@
 		<form action="{{ url_for('balance') }}">
 			<button type="submit">Balance sheet</button>
 			<label>Date: <input name="date" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<button class="fy-btn">FY</button>
 			<label>Period start: <input name="pstart" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>
 				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
@@ -58,6 +60,7 @@
 			<button type="submit">Income statement</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<button class="fy-btn">FY</button>
 			<label>
 				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
 				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
@@ -79,6 +82,7 @@
 			<button type="submit">Cash flows</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<button class="fy-btn">FY</button>
 			<label>
 				Compare <input name="compare" data-inputgroup="compare" value="0" style="width: 2em;" oninput="txtc(this)">
 				<select name="cmpperiod" data-inputgroup="cmpperiod" oninput="selc(this)">
@@ -98,6 +102,7 @@
 			<button type="submit">General ledger</button>
 			<label>Begin date: <input name="date_beg" data-inputgroup="pstart" value="{{ pstart.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
 			<label>End date: <input name="date_end" data-inputgroup="date" value="{{ date.strftime('%Y-%m-%d') }}" style="width: 6em;" oninput="txtc(this)"></label>
+			<button class="fy-btn">FY</button>
 			<label><input name="cash" data-inputgroup="cash" type="checkbox" oninput="chbc(this)"> Cash basis</label>
 		</form>
 	</div>
@@ -122,6 +127,22 @@
 			for (var e2 of document.querySelectorAll('select[data-inputgroup="' + el.dataset['inputgroup'] + '"]')) {
 				e2.value = el.value;
 			}
+		}
+		
+		for (var el of document.querySelectorAll('button.fy-btn')) {
+			(function(el) {
+				el.addEventListener('click', function(evt) {
+					var d_pstart = el.parentNode.querySelector('input[data-inputgroup="pstart"]').value;
+					var bits = d_pstart.split('-');
+					var d_date = (parseInt(bits[0]) + 1) + '-06-30';
+					
+					var e2 = el.parentNode.querySelector('input[data-inputgroup="date"]')
+					e2.value = d_date;
+					
+					txtc(e2);
+					evt.preventDefault();
+				});
+			})(el);
 		}
 	</script>
 {% endblock %}
