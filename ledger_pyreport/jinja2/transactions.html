@@ -136,18 +136,21 @@
 		{% endfor %}
 		
 		{% if account %}
+			{% set nextlink = '/transactions?' + {'date_beg': (date_end + timedelta(days=1)).strftime('%Y-%m-%d'), 'date_end': date_end.replace(year=date_end.year+1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
 			<tr class="total trn-first trn-last">
-				<td>{{ date_end.strftime('%Y-%m-%d') }}</td>
-				<td>Closing Balance</td>
+				<td><a href="{{ nextlink }}">{{ date_end.strftime('%Y-%m-%d') }}</a></td>
+				<td><a href="{{ nextlink }}">Closing Balance</a></td>
 				<td></td>
 				<td style="text-align: right;"></td>
 				<td style="text-align: right;"></td>
 				<td style="text-align: right;">
-					{% if closing_balance >= 0 %}
-						{{ closing_balance|b }} Dr
-					{% else %}
-						{{ -closing_balance|b }} Cr
-					{% endif %}
+					<a href="{{ nextlink }}">
+						{% if closing_balance >= 0 %}
+							{{ closing_balance|b }} Dr
+						{% else %}
+							{{ -closing_balance|b }} Cr
+						{% endif %}
+					</a>
 				</td>
 			</tr>
 		{% else %}
