@@ -22,7 +22,7 @@
 
 {% block links %}
 	{{ super() }}
-	{% if account %}<a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>{% endif %}
+	{% if account %}<li><a href="/transactions?{{ {'date_end': date_end.strftime('%Y-%m-%d'), 'date_beg': date_beg.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a></li>{% endif %}
 {% endblock %}
 
 {% block report %}

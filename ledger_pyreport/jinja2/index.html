@@ -20,6 +20,14 @@
 
 {% block title %}ledger-pyreport{% endblock %}
 
+{% block head %}
+	<style type="text/css">
+		body {
+			padding: 2em;
+		}
+	</style>
+{% endblock %}
+
 {% block body %}
 	<div class="index-group">
 		<form action="{{ url_for('trial') }}">

@@ -18,13 +18,26 @@
 
 {% extends 'base.html' %}
 
+{% block body_classes %}narrow-report{% endblock %}
+
 {% block body %}
-	<div class="nav-header">
-		{% block links %}
-			<a href="/">Home</a>
-		{% endblock %}
+	<div class="page-container">
+		<aside class="leftbox">
+			<div>
+				<ul class="nav-links">
+					{% block links %}
+						<li><a href="/">Home</a></li>
+						<li class="width-toggle"><a href="#" onclick="document.querySelector('body').classList.toggle('narrow-report');return false;">Toggle full width</a></li>
+					{% endblock %}
+				</ul>
+			</div>
+		</aside>
+		
+		<article class="page">
+			{% block report %}
+			{% endblock %}
+		</article>
+		
+		<aside class="rightbox"></aside>
 	</div>
-	
-	{% block report %}
-	{% endblock %}
 {% endblock %}

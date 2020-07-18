@@ -22,7 +22,7 @@
 
 {% block links %}
 	{{ super() }}
-	<a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a>
+	<li><a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a></li>
 {% endblock %}
 
 {% block report %}

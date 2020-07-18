@@ -1,7 +1,7 @@
 /*
     ledger-pyreport
     Copyright © 2020  Lee Yingtong Li (RunasSudo)
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -11,7 +11,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
- 
+
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -19,6 +19,65 @@
 body {
 	font-family: 'TeX Gyre Termes', 'Nimbus Roman', 'Times New Roman', 'Liberation Serif', Times, serif;
 	padding: 2em;
+}
+
+body.narrow-report {
+	padding: 0;
+}
+
+@media screen and (min-width: 37cm) {
+	body.narrow-report article.page {
+		width: 21cm;
+		
+		box-sizing: border-box;
+		margin: 0.5cm 0 0.5cm 0;
+		padding: 1cm;
+		
+		border: 2px solid #ccc;
+		box-shadow: 4px 4px 4px #777;
+	}
+}
+
+/* Left/right boxes */
+
+@media screen and (min-width: 37cm) {
+	body.narrow-report div.page-container {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+	}
+	
+	body.narrow-report aside.leftbox, body.narrow-report aside.rightbox {
+		width: 7cm;
+	}
+	
+	body.narrow-report aside.leftbox > div, body.narrow-report aside.rightbox > div {
+		width: 7cm;
+		box-sizing: border-box;
+		padding: 0.5cm;
+		border: 1px solid #ccc;
+	}
+	
+	body.narrow-report aside.leftbox {
+		position: relative;
+		order: -1;
+		margin: 0.5cm 1cm 0.5cm auto;
+	}
+	
+	body.narrow-report aside.rightbox {
+		position: relative;
+		margin: 0.5cm auto 0.5cm 1cm;
+	}
+	
+	body.narrow-report aside.leftbox > div, body.narrow-report aside.rightbox > div {
+		position: fixed;
+		overflow-y: auto;
+		max-height: calc(100% - 1cm);
+	}
+	
+	body.narrow-report aside.leftbox > div :last-child, body.narrow-report aside.rightbox > div :last-child {
+		margin-bottom: 0;
+	}
 }
 
 /* Tables */
@@ -90,17 +149,51 @@ table.ledger a:hover {
 
 /* Navigation bar */
 
-.nav-header {
+.nav-links {
 	color: #888;
+	margin: 0;
+	padding: 0;
+}
+.nav-links li {
+	list-style: none;
+}
+.nav-links a {
+	color: #888;
+}
+.nav-links a:hover {
+	color: #666;
+}
+
+body:not(.narrow-report) .nav-links {
 	position: absolute;
 	top: 0;
 	left: 0;
 }
-.nav-header a {
-	color: #888;
+body:not(.narrow-report) .nav-links li {
+	display: inline;
 }
-.nav-header a:hover {
-	color: #666;
+body:not(.narrow-report) .nav-links li:not(:last-child)::after {
+	content: " | ";
+}
+@media screen and (max-width: 37cm) {
+	body {
+		padding: 2em !important;
+	}
+	
+	.nav-links {
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+	.nav-links li {
+		display: inline;
+	}
+	.nav-links li.width-toggle {
+		display: none;
+	}
+	.nav-links li:not(:first-child)::before {
+		content: " | ";
+	}
 }
 
 /* Home page */

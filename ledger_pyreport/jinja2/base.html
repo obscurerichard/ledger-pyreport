@@ -24,8 +24,9 @@
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='print.css') }}" media="print">
+		{% block head %}{% endblock %}
 	</head>
-	<body>
+	<body class="{% block body_classes %}{% endblock %}">
 		{% block body %}{% endblock %}
 		
 		<script src="/static/toasts.js"></script>
