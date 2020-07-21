@@ -267,7 +267,7 @@ class Amount:
 	def __rsub__(self, other):
 		return Amount(other - self.amount, self.commodity)
 	
-	def exchange(self, commodity, is_cost, price=None):
+	def exchange(self, commodity, is_cost, price=None, date=None, ledger=None):
 		if self.commodity.name == commodity.name:
 			return Amount(self)
 		
@@ -276,6 +276,16 @@ class Amount:
 		
 		if price:
 			return Amount(self.amount * price.amount, commodity)
+		
+		if date and ledger:
+			if any(p[1] == self.commodity.name for p in ledger.prices):
+				# This commodity has price information
+				# Measured at fair value
+				return self.exchange(commodity, is_cost, ledger.get_price(self.commodity, commodity, date))
+			else:
+				# This commodity has no price information
+				# Measured at historical cost
+				return self.exchange(commodity, True)
 		
 		raise TypeError('Cannot exchange {} to {}'.format(self.commodity, commodity))
 	
@@ -308,14 +318,7 @@ class Balance:
 			if is_cost or amount.commodity.name == commodity.name:
 				result += amount.exchange(commodity, is_cost)
 			else:
-				if any(p[1] == amount.commodity.name for p in ledger.prices):
-					# This commodity has price information
-					# Measured at fair value
-					result += amount.exchange(commodity, is_cost, ledger.get_price(amount.commodity, commodity, date))
-				else:
-					# This commodity has no price information
-					# Measured at historical cost
-					result += amount.exchange(commodity, True)
+				result += amount.exchange(commodity, is_cost, date=date, ledger=ledger)
 		return result
 	
 	def __neg__(self):
