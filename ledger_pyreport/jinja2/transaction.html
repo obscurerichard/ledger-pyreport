@@ -22,7 +22,8 @@
 
 {% block links %}
 	{{ super() }}
-	<li><a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on'}|urlencode }}">Show commodity detail</a></li>
+	<li><a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on', 'split': 'on' if split else ''}|urlencode }}">Show commodity detail</a></li>
+	{% if not split %}<li><a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'split': 'on'}|urlencode }}">Balance postings</a></li>{% endif %}
 {% endblock %}
 
 {% block report %}

@@ -20,6 +20,7 @@ from decimal import Decimal
 from enum import Enum
 import functools
 import itertools
+import math
 
 class Ledger:
 	def __init__(self, date):
@@ -102,6 +103,52 @@ class Transaction:
 			account, comment, state = k
 			posting = Posting(result, account, sum(p.exchange(commodity).amount for p in g), comment, state)
 			result.postings.append(posting)
+		
+		return result
+	
+	def split(self, report_commodity):
+		# Split postings into debit-credit pairs (cost price)
+		unbalanced_postings = [] # List of [posting, base amount in report commodity, amount to balance in report commodity]
+		result = [] # List of balanced pairs
+		
+		for posting in self.postings:
+			base_amount = posting.amount.exchange(report_commodity, True).amount # Used to apportion other commodities
+			amount_to_balance = base_amount
+			
+			# Try to balance against previously unbalanced postings
+			for unbalanced_posting in unbalanced_postings[:]:
+				if math.copysign(1, amount_to_balance) != math.copysign(1, unbalanced_posting[2]):
+					if abs(unbalanced_posting[2]) == abs(amount_to_balance):
+						# Just enough
+						unbalanced_postings.remove(unbalanced_posting)
+						result.append((
+							Posting(self, posting.account, Amount(amount_to_balance / base_amount * posting.amount.amount, posting.amount.commodity), posting.comment, posting.state),
+							Posting(self, unbalanced_posting[0].account, Amount(-amount_to_balance / unbalanced_posting[1] * unbalanced_posting[0].amount.amount, unbalanced_posting[0].amount.commodity), unbalanced_posting[0].comment, unbalanced_posting[0].state)
+						))
+						amount_to_balance = 0
+					elif abs(unbalanced_posting[2]) > abs(amount_to_balance):
+						# Excess - partial balancing of unbalanced posting
+						unbalanced_posting[2] += amount_to_balance
+						result.append((
+							Posting(self, posting.account, Amount(amount_to_balance / base_amount * posting.amount.amount, posting.amount.commodity), posting.comment, posting.state),
+							Posting(self, unbalanced_posting[0].account, Amount(-amount_to_balance / unbalanced_posting[1] * unbalanced_posting[0].amount.amount, unbalanced_posting[0].amount.commodity), unbalanced_posting[0].comment, unbalanced_posting[0].state)
+						))
+						amount_to_balance = 0
+					elif abs(unbalanced_posting[2]) < abs(amount_to_balance):
+						# Not enough - partial balancing of this posting
+						amount_to_balance += unbalanced_posting[2]
+						result.append((
+							Posting(self, posting.account, Amount(-unbalanced_posting[2] / base_amount * posting.amount.amount, posting.amount.commodity), posting.comment, posting.state),
+							Posting(self, unbalanced_posting[0].account, Amount(unbalanced_posting[2] / unbalanced_posting[1] * unbalanced_posting[0].amount.amount, unbalanced_posting[0].amount.commodity), unbalanced_posting[0].comment, unbalanced_posting[0].state)
+						))
+						unbalanced_posting[2] = 0
+			
+			if amount_to_balance:
+				# Unbalanced remainder - add it to the list
+				unbalanced_postings.append([posting, base_amount, amount_to_balance])
+		
+		if unbalanced_postings:
+			raise Exception('Unexpectedly imbalanced transaction')
 		
 		return result
 

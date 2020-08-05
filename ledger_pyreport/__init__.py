@@ -309,6 +309,7 @@ def transaction():
 	uuid = flask.request.args['uuid']
 	cash = flask.request.args.get('cash', False)
 	commodity = flask.request.args.get('commodity', False)
+	split = flask.request.args.get('split', False)
 	
 	# General ledger
 	l = ledger.raw_transactions_at_date(None)
@@ -320,15 +321,20 @@ def transaction():
 	
 	transaction = next((t for t in l.transactions if str(t.uuid) == uuid))
 	
+	if split:
+		postings = transaction.split(report_commodity)
+		transaction = Transaction(l, transaction.id, transaction.date, transaction.description, transaction.code, transaction.uuid)
+		transaction.postings = [p for r in postings for p in r]
+	
 	if commodity:
 		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).clean()
 		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).clean()
 		totals = itertools.zip_longest(total_dr.amounts, total_cr.amounts)
-		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, totals=totals, total_dr=total_dr.exchange(report_commodity, True), total_cr=total_cr.exchange(report_commodity, True), report_commodity=report_commodity, cash=cash, date=date, pstart=pstart)
+		return flask.render_template('transaction_commodity.html', ledger=l, transaction=transaction, totals=totals, total_dr=total_dr.exchange(report_commodity, True), total_cr=total_cr.exchange(report_commodity, True), report_commodity=report_commodity, cash=cash, split=split, date=date, pstart=pstart)
 	else:
 		total_dr = sum((p.amount for p in transaction.postings if p.amount > 0), Balance()).exchange(report_commodity, True)
 		total_cr = sum((p.amount for p in transaction.postings if p.amount < 0), Balance()).exchange(report_commodity, True)
-		return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity, cash=cash, date=date, pstart=pstart)
+		return flask.render_template('transaction.html', ledger=l, transaction=transaction, total_dr=total_dr, total_cr=total_cr, report_commodity=report_commodity, cash=cash, split=split, date=date, pstart=pstart)
 
 # Template filters
 

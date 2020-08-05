@@ -20,6 +20,11 @@
 
 {% block title %}{{ transaction.description }}{% endblock %}
 
+{% block links %}
+	{{ super() }}
+	{% if not split %}<li><a href="/transaction?{{ {'date': date.strftime('%Y-%m-%d'), 'pstart': pstart.strftime('%Y-%m-%d'), 'uuid': transaction.uuid, 'cash': 'on' if cash else '', 'commodity': 'on', 'split': 'on'}|urlencode }}">Balance postings</a></li>{% endif %}
+{% endblock %}
+
 {% block report %}
 	<h1 style="margin-bottom: 1em;">Transaction</h1>
 	
