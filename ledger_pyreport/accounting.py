@@ -132,58 +132,7 @@ def balance_sheet(tb):
 	return tb
 
 def account_to_cash(account, commodity):
-	# Apply FIFO methodology to match postings
-	balance = [] # list of [posting, amount to balance, amount remaining, balancing list of [posting, amount balanced]]
-	
-	for transaction in account.ledger.transactions[:]:
-		if any(p.account == account for p in transaction.postings):
-			for posting in transaction.postings[:]:
-				if posting.account == account:
-					#transaction.postings.remove(posting)
-					pass
-				else:
-					# Try to balance postings
-					amount_to_balance = posting.amount.exchange(commodity, True).amount
-					
-					while amount_to_balance != 0:
-						balancing_posting = next((b for b in balance if b[2] != 0 and math.copysign(1, b[2]) != math.copysign(1, amount_to_balance)), None)
-						if balancing_posting is None:
-							break
-						
-						if abs(balancing_posting[2]) >= abs(amount_to_balance):
-							balancing_posting[3].append([posting, amount_to_balance])
-							balancing_posting[2] += amount_to_balance
-							amount_to_balance = Decimal(0)
-							break
-						else:
-							balancing_posting[3].append([posting, -balancing_posting[2]])
-							amount_to_balance += balancing_posting[2]
-							balancing_posting[2] = Decimal(0)
-					
-					if amount_to_balance != 0:
-						# New unbalanced remainder
-						balance.append([posting, amount_to_balance, amount_to_balance, []])
-			
-			transaction.postings = []
-	
-	# Finalise balanced postings
-	for orig_posting, amount_to_balance, amount_remaining, balancing_postings in balance:
-		posting = Posting(orig_posting.transaction, orig_posting.account, Amount(amount_to_balance, commodity))
-		posting.transaction.postings.append(posting)
-		
-		for balancing_posting, amount_balanced in balancing_postings:
-			posting.transaction.postings.append(Posting(posting.transaction, balancing_posting.account, Amount(amount_balanced, commodity)))
-			
-			if balancing_posting in balancing_posting.transaction.postings:
-				balancing_posting.transaction.postings.remove(balancing_posting)
-		
-		if amount_remaining != 0:
-			if posting.account.is_asset:
-				# Cash - charge any unbalanced remainder to Other Income
-				posting.transaction.postings.append(Posting(posting.transaction, account.ledger.get_account(config['cash_other_income']), Amount(-amount_remaining, commodity)))
-			else:
-				# Liabilities, etc. - discard any unbalanced remainder
-				posting.amount.amount -= amount_remaining
+	raise Exception('Not implemented')
 
 # Adjust (in place) a ledger to convert accounting to a cash basis
 def ledger_to_cash(ledger, commodity):
