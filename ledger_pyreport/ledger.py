@@ -91,12 +91,12 @@ def raw_transactions_at_date(date):
 	ledger = Ledger(date)
 	ledger.prices = get_pricedb()
 	
-	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment)),%(quoted(state))\n')
+	output = run_ledger_date(date, 'csv', '--csv-format', '%(quoted(parent.id)),%(quoted(format_date(date))),%(quoted(parent.code)),%(quoted(payee)),%(quoted(account)),%(quoted(display_amount)),%(quoted(comment)),%(quoted(state)),%(quoted(note))\n')
 	
 	uuids = set()
 	
-	reader = csv.reader(output.splitlines(), dialect='ledger')
-	for trn_id, date_str, code, payee, account_str, amount_str, comment, state_str in reader:
+	reader = csv.reader(output.splitlines(True), dialect='ledger')
+	for trn_id, date_str, code, payee, account_str, amount_str, comment, state_str, note_str in reader:
 		if not ledger.transactions or trn_id != ledger.transactions[-1].id:
 			if trn_id in uuids:
 				digest = hashlib.sha256()
@@ -107,7 +107,13 @@ def raw_transactions_at_date(date):
 			else:
 				uuid = trn_id
 			
-			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code=code, uuid=uuid)
+			metadata = {}
+			for line in note_str.splitlines():
+				line = line.strip()
+				if ': ' in line:
+					metadata[line.split(': ')[0]] = line.split(': ')[1].strip()
+			
+			transaction = Transaction(ledger, trn_id, datetime.strptime(date_str, '%Y-%m-%d'), payee, code, uuid, metadata)
 			ledger.transactions.append(transaction)
 			
 			uuids.add(uuid)

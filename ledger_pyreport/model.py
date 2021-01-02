@@ -67,13 +67,14 @@ class Ledger:
 		return max(prices, key=lambda p: p[0])[2]
 
 class Transaction:
-	def __init__(self, ledger, id, date, description, code=None, uuid=None):
+	def __init__(self, ledger, id, date, description, code=None, uuid=None, metadata=None):
 		self.ledger = ledger
 		self.id = id
 		self.date = date
 		self.description = description
 		self.code = code
 		self.uuid = uuid
+		self.metadata = metadata or {}
 		
 		self.postings = []
 	
@@ -91,12 +92,12 @@ class Transaction:
 		return '\n'.join(result)
 	
 	def reverse(self, id, date, description, code=None, uuid=None):
-		result = Transaction(self.ledger, id, date, description, code, uuid)
+		result = Transaction(self.ledger, id, date, description, code, uuid, self.metadata)
 		result.postings = [Posting(p.transaction, p.account, -p.amount, p.comment, p.state) for p in self.postings]
 		return result
 	
 	def exchange(self, commodity):
-		result = Transaction(self.ledger, self.id, self.date, self.description, self.code, self.uuid)
+		result = Transaction(self.ledger, self.id, self.date, self.description, self.code, self.uuid, self.metadata)
 		
 		# Combine like postings
 		for k, g in itertools.groupby(self.postings, key=lambda p: (p.account, p.comment, p.state)):
