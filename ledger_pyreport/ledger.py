@@ -53,6 +53,9 @@ def financial_year(date):
 
 csv.register_dialect('ledger', doublequote=False, escapechar='\\', strict=True)
 
+RE_COMMODITY1 = re.compile(r'([0123456789.,-]+)( *)(.+)')
+RE_COMMODITY2 = re.compile(r'(.+?)( *)([0123456789.,-]+)')
+
 def parse_amount(amount):
 	if '{' in amount:
 		amount_str = amount[:amount.index('{')].strip()
@@ -63,13 +66,14 @@ def parse_amount(amount):
 	
 	if amount_str[0] in list('0123456789-'):
 		# Commodity follows number
-		bits = amount_str.split()
-		amount_num = Decimal(bits[0].replace(',', ''))
-		commodity = Commodity(bits[1].strip('"'), False)
+		result = RE_COMMODITY1.match(amount_str)
+		amount_num = Decimal(result.group(1).replace(',', ''))
+		commodity = Commodity(result.group(3).strip('"'), False, len(result.group(2)) > 0)
 	else:
 		# Commodity precedes number
-		commodity = Commodity(amount_str[0], True)
-		amount_num = Decimal(amount_str[1:].replace(',', ''))
+		result = RE_COMMODITY2.match(amount_str)
+		amount_num = Decimal(result.group(3).replace(',', ''))
+		commodity = Commodity(result.group(1).strip('"'), True, len(result.group(2)) > 0)
 	
 	if price_str:
 		commodity.price = parse_amount(price_str)

@@ -435,9 +435,10 @@ class Balance:
 		return self + (-other)
 
 class Commodity:
-	def __init__(self, name, is_prefix, price=None):
+	def __init__(self, name, is_prefix, is_space, price=None):
 		self.name = name
 		self.is_prefix = is_prefix
+		self.is_space = is_space
 		self.price = price
 	
 	def __repr__(self):
@@ -449,7 +450,7 @@ class Commodity:
 		return self.name == other.name and self.price == other.price
 	
 	def strip_price(self):
-		return Commodity(self.name, self.is_prefix)
+		return Commodity(self.name, self.is_prefix, self.is_space)
 
 class TrialBalance:
 	def __init__(self, ledger, date, pstart, label=None):

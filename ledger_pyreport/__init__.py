@@ -368,9 +368,9 @@ def filter_amount_positive(amt):
 @app.template_filter('bc')
 def filter_commodity_positive(amt):
 	if amt.commodity.is_prefix:
-		return flask.Markup('<span class="copyable-amount" title="{}">{}{:,.2f}</span>'.format(amt.tostr(False), amt.commodity.name, amt.amount).replace(',', '&#8239;'))
+		return flask.Markup('<span class="copyable-amount" title="{}">{}{}{:,.2f}</span>'.format(amt.tostr(False), amt.commodity.name, ' ' if amt.commodity.is_space else '', amt.amount).replace(',', '&#8239;'))
 	else:
-		return flask.Markup('<span class="copyable-amount" title="{}">{:,.2f} {}</span>'.format(amt.tostr(False), amt.amount, amt.commodity.name).replace(',', '&#8239;'))
+		return flask.Markup('<span class="copyable-amount" title="{}">{:,.2f}{}{}</span>'.format(amt.tostr(False), amt.amount, ' ' if amt.commodity.is_space else '', amt.commodity.name).replace(',', '&#8239;'))
 
 @app.template_filter('bt')
 def filter_commodity_table_positive(amt, show_price, link=None):
