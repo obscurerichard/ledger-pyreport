@@ -65,6 +65,17 @@ class Ledger:
 			raise Exception('No price information for {} to {} at {:%Y-%m-%d}'.format(commodity_from, commodity_to, date))
 		
 		return max(prices, key=lambda p: p[0])[2]
+	
+	def get_balance(self, account, date=None):
+		result = Balance()
+		
+		for transaction in self.transactions:
+			if date is None or transaction.date <= date:
+				for posting in transaction.postings:
+					if posting.account == account:
+						result += posting.amount
+		
+		return result
 
 class Transaction:
 	def __init__(self, ledger, id, date, description, code=None, uuid=None, metadata=None):
@@ -315,7 +326,16 @@ class Amount:
 	def __rsub__(self, other):
 		return Amount(other - self.amount, self.commodity)
 	
-	def exchange(self, commodity, is_cost, price=None, date=None, ledger=None):
+	def __mul__(self, other):
+		return Amount(self.amount * other, self.commodity)
+	def __truediv__(self, other):
+		if isinstance(other, Amount):
+			if other.commodity != self.commodity:
+				raise TypeError('Cannot combine Amounts of commodity {} and {}'.format(self.commodity.name, other.commodity.name))
+			return self.amount / other.amount
+		return Amount(self.amount / Decimal(other), self.commodity)
+	
+	def exchange(self, commodity, is_cost=True, price=None, date=None, ledger=None):
 		if self.commodity.name == commodity.name:
 			return Amount(self)
 		
@@ -360,7 +380,7 @@ class Balance:
 	def clean(self):
 		return Balance([a for a in self.amounts if a != 0])
 	
-	def exchange(self, commodity, is_cost, date=None, ledger=None):
+	def exchange(self, commodity, is_cost=True, date=None, ledger=None):
 		result = Amount(0, commodity)
 		for amount in self.amounts:
 			if is_cost or amount.commodity.name == commodity.name:

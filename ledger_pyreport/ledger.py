@@ -51,7 +51,7 @@ def financial_year(date):
 
 # Ledger logic
 
-csv.register_dialect('ledger', doublequote=False, escapechar='\\')
+csv.register_dialect('ledger', doublequote=False, escapechar='\\', strict=True)
 
 def parse_amount(amount):
 	if '{' in amount:
