@@ -131,4 +131,6 @@ def raw_transactions_at_date(date):
 		if amount.commodity.name not in ledger.commodities:
 			ledger.commodities[amount.commodity.name] = amount.commodity.strip_price()
 	
+	ledger.transactions.sort(key=lambda t: t.date)
+	
 	return ledger

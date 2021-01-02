@@ -29,7 +29,7 @@
 		</td>
 		{% for cashflow in cashflows %}
 			{% set amount = (-cashflow.get_balance(account) if invert else cashflow.get_balance(account)).exchange(report_commodity, True) %}
-			<td>{% if not amount.near_zero %}{{ amount|a('/transactions?' + {'date': cashflow.date.strftime('%Y-%m-%d'), 'pstart': cashflow.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode) }}{% endif %}</td>
+			<td>{% if not amount.near_zero %}{{ amount|a('/transactions?' + {'date_end': cashflow.date.strftime('%Y-%m-%d'), 'date_beg': cashflow.pstart.strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode) }}{% endif %}</td>
 		{% endfor %}
 	</tr>
 	
