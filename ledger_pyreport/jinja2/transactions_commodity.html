@@ -86,6 +86,21 @@
 				</tr>
 			{% endfor %}
 			{% set ns.balance = ns.balance.clean() %}
+			
+			{# This account's comment #}
+			{% for posting in transaction.postings if posting.account == account and posting.comment %}
+				<tr>
+					<td></td>
+					<td style="padding-left: 0.75em;">{{ posting.comment }}</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			{% endfor %}
 		{% endfor %}
 		
 		{% set nextlink = '/transactions?' + {'date_beg': (date_end + timedelta(days=1)).strftime('%Y-%m-%d'), 'date_end': date_end.replace(year=date_end.year+1).strftime('%Y-%m-%d'), 'account': account.name, 'cash': 'on' if cash else ''}|urlencode %}
