@@ -163,6 +163,34 @@ class Transaction:
 			raise Exception('Unexpectedly imbalanced transaction')
 		
 		return result
+	
+	def perspective_of(self, account):
+		# Return a transaction from the "perspective" of this account only
+		if len(self.postings) <= 2:
+			# No need to modify if already simple
+			return self
+		
+		acc_postings = [p for p in self.postings if p.account == account]
+		if len(acc_postings) == 0:
+			raise Exception('Attempted to view transaction from invalid account')
+		
+		# Are all postings to that account of the same sign?
+		if not all(p.amount.sign == acc_postings[0].amount.sign for p in acc_postings[1:]):
+			# Unable to simplify complex transaction
+			return self
+		
+		# Is there one posting only of the opposite sign?
+		opp_postings = [p for p in self.postings if p.amount.sign == -acc_postings[0].amount.sign]
+		if len(opp_postings) != 1:
+			# Unable to simplify complex transaction
+			return self
+		
+		# Balance only acc_postings
+		new_opp_postings = [Posting(self, opp_postings[0].account, -p.amount, opp_postings[0].comment, opp_postings[0].state) for p in acc_postings]
+		
+		result = Transaction(self.ledger, self.id, self.date, self.description, self.code, self.uuid, self.metadata)
+		result.postings = acc_postings + new_opp_postings
+		return result
 
 class Posting:
 	class State(Enum):
@@ -362,6 +390,14 @@ class Amount:
 		if abs(self.amount) < 0.005:
 			return True
 		return False
+	
+	@property
+	def sign(self):
+		if self.amount > 0:
+			return 1
+		if self.amount < 0:
+			return -1
+		return 0
 
 class Balance:
 	def __init__(self, amounts=None):

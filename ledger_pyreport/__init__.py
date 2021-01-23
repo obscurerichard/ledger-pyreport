@@ -295,7 +295,7 @@ def transactions():
 	else:
 		# Account Transactions
 		account = l.get_account(account)
-		transactions = [t for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
+		transactions = [t.perspective_of(account) for t in l.transactions if t.date <= date_end and t.date >= date_beg and any(p.account == account for p in t.postings)]
 		
 		opening_balance = accounting.trial_balance_raw(l, date_beg - timedelta(days=1), date_beg).get_balance(account).exchange(report_commodity, True)
 		closing_balance = accounting.trial_balance_raw(l, date_end, date_beg).get_balance(account).exchange(report_commodity, True)
