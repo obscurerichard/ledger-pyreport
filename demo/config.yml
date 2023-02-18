@@ -15,7 +15,7 @@ oci_account: OCI # Other Comprehensive Income
 separate_pandl: ['Business']
 
 # These accounts will automatically be populated on reports
-unrealized_gains: 'OCI:Unrealized Gains'
+unrealized_gains: ['OCI:Unrealized Gains', 'OCI: Unrealized Losses']
 
 accumulated_oci: 'Equity:Accumulated Other Comprehensive Income'
 current_year_oci: 'Equity:Accumulated Other Comprehensive Income:Current Year Other Comprehensive Income'
