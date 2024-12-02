@@ -1,0 +1,16 @@
+---
+name: Build Latest
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+
+  build:
+    uses: obscurerichard/ledger-pyreport/.github/workflows/build-docker.yml@0.1.1
+    with:
+      tag: latest
+    secrets: inherit
+

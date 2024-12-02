@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ledger_pyreport"
+version = "0.1.4"
+description = "Webapp for generating interactive and printable accounting reports from ledger-cli"
+readme = "README.md"
+authors = [
+    {name = "Lee Yingtong", email = "blog@yingtongli.me"},
+    {name = "Richard Bullington-McGuire", email = "richard.bullington.mcguire@gmail.com"},
+]
+maintainers = [
+    {name = "Richard Bullington-McGuire", email="richard.bullington.mcguire@gmail.com"},
+]
+license = {text = "AGPL-3.0-or-later"}
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3'
+]
+dependencies = [
+    "Flask==1.1.1",
+    "Jinja2==2.11.1",
+    "MarkupSafe==1.1.1",
+    "PyYAML==5.3.1",
+    "Werkzeug==1.0.0",
+    "click==7.1.1",
+    "itsdangerous==1.1.0",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["demo"]
+
+# Thanks https://stackoverflow.com/a/76435649/424301 for the tip
+#[tool.setuptools.package-data]
+#mypkg = ["*.css", "*.html", "*.css"]
