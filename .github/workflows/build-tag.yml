@@ -1,0 +1,14 @@
+---
+name: Build Tag
+
+on:
+  push:
+    tags:
+      - '*' 
+
+jobs:
+  build:
+    uses: obscurerichard/ledger-pyreport/.github/workflows/build-docker.yml@0.1.1
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
