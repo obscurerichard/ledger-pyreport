@@ -1,0 +1,2 @@
+include ledger_pyreport/static/*
+include ledger_pyreport/jinja2/*
