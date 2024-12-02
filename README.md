@@ -31,16 +31,27 @@ The original author of this software [Lee Yingtong Li](https://yingtongli.me/) g
 See [https://yingtongli.me/blog/2020/03/31/ledger-pyreport.html](https://yingtongli.me/blog/2020/03/31/ledger-pyreport.html) for further discussion.
 
 ## Usage
+You can run `ledger_pyreport` either using Docker, or using any Python 3.10+ interpreter on a system that also has `ledger` installed.
 
 ### Running using Docker 
 
-This software is packaged with [Docker](https://www.docker.com/) and is [available on Dockerhub]()
+This software is packaged with [Docker](https://www.docker.com/) and is [available on Dockerhub](https://hub.docker.com/r/obscurerichard/ledger-pyreport). If you are running Docker you can run this as follows:
+
 ```
 docker run --publish 5000:5000 obscurerichard/ledger-pyreport:latest
 ```
-You can then view the demo at http://localhost:5000/
+You can then view the demo at http://localhost:5000/ and play around.
 
-TODO: add instructions about copying `config.yml` and running it via Docker
+What you _probably_ want to do is run this with your own Ledger data, however. To do that with Docker, first copy [config.example.yml](config.example.yml) to `config.yml` in your Ledger data directory, and edit it to reflect the name of your Ledger data file and chart of accouts, plus reporting currency and any required ledger arguments.
+
+```
+docker run --rm --volume "$PWD":/data  --publish 5000:5000 --name ledger_pyreport obscurerichard/ledger-pyreport:latest
+```
+
+You can set up a shell alias in your .bashrc or .zshrc to make it possible to run this with a short `ledger_pyreport` command:
+```
+alias ledger_pyreport='docker run --rm --volume "$PWD":/data  --publish 5000:5000 --name ledger_pyreport obscurerichard/ledger-pyreport:latest'
+```
 
 ### Installing from source
 
