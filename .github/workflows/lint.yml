@@ -13,4 +13,4 @@ jobs:
       - name: fawltydeps lint
         uses: tweag/FawltyDeps-action@v0.1.0
         with:
-          options: --list-imports --list-deps --detailed
+          options: --detailed
