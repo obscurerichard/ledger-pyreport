@@ -12,5 +12,5 @@ jobs:
         uses: actions/checkout@v4
       - name: fawltydeps lint
         uses: tweag/FawltyDeps-action@v0.1.0
-        with:
-          options: --detailed
+          #with:
+          #options: --detailed
