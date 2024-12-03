@@ -1,0 +1,14 @@
+---
+name: Lint
+
+on: pull_request
+
+jobs:
+  lint:
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: fawltydeps lint
+        uses: tweag/FawltyDeps-action@v0.1.0
+        with:
+          options: --list-sources --list-imports --list-deps --detailed
