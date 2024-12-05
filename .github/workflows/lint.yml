@@ -1,0 +1,14 @@
+---
+name: Lint
+
+on: pull_request
+
+jobs:
+  lint:
+    name: FawltyDeps
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: lint - FawltyDeps
+        uses: tweag/FawltyDeps-action@v0.2.0
