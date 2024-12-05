@@ -1,7 +1,7 @@
 FROM python:3.10-bullseye
 
 ENV ledger_version=3.3.2
-# Get ledger compiled & installed 
+# Get ledger compiled & installed
 # Install prerequisites per per https://github.com/ledger/ledger#debian
 RUN apt-get -q update && \
      apt-get -q install -y build-essential cmake autopoint texinfo python3-dev \

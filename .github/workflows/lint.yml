@@ -5,12 +5,10 @@ on: pull_request
 
 jobs:
   lint:
-    name: Lint
+    name: FawltyDeps
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v4
-      - name: fawltydeps lint
-        uses: tweag/FawltyDeps-action@v0.1.0
-          #with:
-          #options: --detailed
+      - name: lint - FawltyDeps
+        uses: tweag/FawltyDeps-action@v0.2.0
