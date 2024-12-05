@@ -34,7 +34,7 @@ See [https://yingtongli.me/blog/2020/03/31/ledger-pyreport.html](https://yington
 
 You can run `ledger_pyreport` either using Docker, or using any Python 3.10+ interpreter on a system that also has `ledger` installed.
 
-### Running using Docker 
+### Running using Docker
 
 This software is packaged with [Docker](https://www.docker.com/) and is [available on Dockerhub](https://hub.docker.com/r/obscurerichard/ledger-pyreport). If you are running Docker you can run this as follows:
 
