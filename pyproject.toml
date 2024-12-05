@@ -37,3 +37,14 @@ exclude = ["demo"]
 # Thanks https://stackoverflow.com/a/76435649/424301 for the tip
 #[tool.setuptools.package-data]
 #mypkg = ["*.css", "*.html", "*.css"]
+
+[tool.fawltydeps]
+ignore_unused = [
+    # Flask dependencies, without them, the app fails.
+    # but these are not, indeed used in the ledger-pyreport code directly.
+    "Jinja2",
+    "MarkupSafe",
+    "Werkzeug",
+    "click",
+    "itsdangerous",
+]
