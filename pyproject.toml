@@ -31,6 +31,11 @@ dependencies = [
     "itsdangerous==1.1.0",
 ]
 
+[optional.dependencies]
+dev = [
+  "FawltyDeps",
+]
+
 [tool.setuptools.packages.find]
 exclude = ["demo"]
 
@@ -40,6 +45,7 @@ exclude = ["demo"]
 
 [tool.fawltydeps]
 ignore_unused = [
+    "FawltyDeps",
     # Flask dependencies, without them, the app fails.
     # but these are not, indeed used in the ledger-pyreport code directly.
     "Jinja2",
