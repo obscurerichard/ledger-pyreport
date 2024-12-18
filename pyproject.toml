@@ -22,18 +22,15 @@ classifiers = [
     'Programming Language :: Python :: 3'
 ]
 dependencies = [
-    "Flask==2.2.5",
-    "Jinja2==2.11.1",
-    "MarkupSafe==1.1.1",
-    "PyYAML==5.3.1",
-    "Werkzeug==1.0.0",
-    "click==7.1.1",
-    "itsdangerous==1.1.0",
+    "Flask==3.1.0",
+    "PyYAML==6.0.2",
+    "markupsafe==3.0.2",
 ]
 
 [optional.dependencies]
 dev = [
   "FawltyDeps",
+  "uppd",
 ]
 
 [tool.setuptools.packages.find]
@@ -46,11 +43,5 @@ exclude = ["demo"]
 [tool.fawltydeps]
 ignore_unused = [
     "FawltyDeps",
-    # Flask dependencies, without them, the app fails.
-    # but these are not, indeed used in the ledger-pyreport code directly.
-    "Jinja2",
-    "MarkupSafe",
-    "Werkzeug",
-    "click",
-    "itsdangerous",
+    "uppd",
 ]
