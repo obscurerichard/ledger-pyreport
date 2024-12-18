@@ -17,5 +17,5 @@
 import os
 import yaml
 
-with open(os.getenv('LEDGER_PYREPORT_CONFIG', 'config.yml'), 'r') as f:
-	config = yaml.safe_load(f)
+with open(os.getenv("LEDGER_PYREPORT_CONFIG", "config.yml"), "r") as f:
+    config = yaml.safe_load(f)

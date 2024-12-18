@@ -17,14 +17,19 @@
 # Extension to move pending postings to a pending transactions account
 
 _ledger_raw_transactions_at_date = ledger.raw_transactions_at_date
+
+
 def ledger_raw_transactions_at_date(*args, **kwargs):
-	l = _ledger_raw_transactions_at_date(*args, **kwargs)
-	
-	for transaction in l.transactions:
-		for posting in transaction.postings:
-			if posting.state == Posting.State.PENDING:
-				posting.account = l.get_account('Liabilities:Current:Pending Transactions')
-	
-	return l
+    l = _ledger_raw_transactions_at_date(*args, **kwargs)
+
+    for transaction in l.transactions:
+        for posting in transaction.postings:
+            if posting.state == Posting.State.PENDING:
+                posting.account = l.get_account(
+                    "Liabilities:Current:Pending Transactions"
+                )
+
+    return l
+
 
 ledger.raw_transactions_at_date = ledger_raw_transactions_at_date
