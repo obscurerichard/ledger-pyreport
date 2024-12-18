@@ -1,10 +1,13 @@
 ---
 name: Build Tag
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   push:
     tags:
-      - '*' 
+      - '*'
 
 jobs:
   build:
