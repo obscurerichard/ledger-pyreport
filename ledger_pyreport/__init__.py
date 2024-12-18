@@ -14,17 +14,17 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from . import accounting
-from . import ledger
-from .config import config
-from .model import *
-
 import calendar
+import itertools
 from datetime import datetime, timedelta
 from decimal import Decimal
-from markupsafe import Markup
+
 import flask
-import itertools
+from markupsafe import Markup
+
+from . import accounting, ledger
+from .config import config
+from .model import *
 
 app = flask.Flask(__name__, template_folder="jinja2")
 
@@ -549,7 +549,7 @@ def transaction():
 
     l = accounting.trial_balance(l, date, pstart, report_commodity).ledger
 
-    transaction = next((t for t in l.transactions if str(t.uuid) == uuid))
+    transaction = next(t for t in l.transactions if str(t.uuid) == uuid)
 
     if split:
         postings = transaction.split(report_commodity)
@@ -614,48 +614,38 @@ def filter_amount(amt, link=None):
         amt_str = "0.00"
         is_pos = True
     elif amt >= 0:
-        amt_str = "{:,.2f}".format(amt.amount).replace(
+        amt_str = f"{amt.amount:,.2f}".replace(
             ",", "&#8239;"
         )  # Narrow no-break space
         is_pos = True
     else:
-        amt_str = "{:,.2f}".format(-amt.amount).replace(",", "&#8239;")
+        amt_str = f"{-amt.amount:,.2f}".replace(",", "&#8239;")
         is_pos = False
 
     if link:
         if is_pos:
             return Markup(
-                '<a href="{}"><span title="{}">{}</span></a>&nbsp;'.format(
-                    link, amt.tostr(False), amt_str
-                )
+                f'<a href="{link}"><span title="{amt.tostr(False)}">{amt_str}</span></a>&nbsp;'
             )
         else:
             return Markup(
-                '<a href="{}"><span title="{}">({})</span></a>'.format(
-                    link, amt.tostr(False), amt_str
-                )
+                f'<a href="{link}"><span title="{amt.tostr(False)}">({amt_str})</span></a>'
             )
     else:
         if is_pos:
             return Markup(
-                '<span class="copyable-amount" title="{}">{}</span>&nbsp;'.format(
-                    amt.tostr(False), amt_str
-                )
+                f'<span class="copyable-amount" title="{amt.tostr(False)}">{amt_str}</span>&nbsp;'
             )
         else:
             return Markup(
-                '<span class="copyable-amount" title="{}">({})</span>'.format(
-                    amt.tostr(False), amt_str
-                )
+                f'<span class="copyable-amount" title="{amt.tostr(False)}">({amt_str})</span>'
             )
 
 
 @app.template_filter("b")
 def filter_amount_positive(amt):
     return Markup(
-        '<span class="copyable-amount" title="{}">{:,.2f}</span>'.format(
-            amt.tostr(False), amt.amount
-        ).replace(",", "&#8239;")
+        f'<span class="copyable-amount" title="{amt.tostr(False)}">{amt.amount:,.2f}</span>'.replace(",", "&#8239;")
     )
 
 
@@ -688,30 +678,24 @@ def filter_commodity_table_positive(amt, show_price, link=None):
         amt_str = filter_commodity_positive(amt)
         cur_str = ""
     else:
-        amt_str = "{:,.2f}".format(amt.amount).replace(",", "&#8239;")
+        amt_str = f"{amt.amount:,.2f}".replace(",", "&#8239;")
         cur_str = amt.commodity.name
 
     amt_full = amt.tostr(False)
 
     result.append(
-        '<td style="text-align: right;"><a href="{}"><span class="copyable-amount" title="{}">{}</span></a></td>'.format(
-            link, amt_full, amt_str
-        )
+        f'<td style="text-align: right;"><a href="{link}"><span class="copyable-amount" title="{amt_full}">{amt_str}</span></a></td>'
         if link
-        else '<td style="text-align: right;"><span class="copyable-amount" title="{}">{}</span></td>'.format(
-            amt_full, amt_str
-        )
+        else f'<td style="text-align: right;"><span class="copyable-amount" title="{amt_full}">{amt_str}</span></td>'
     )
     result.append(
-        '<td><span class="copyable-amount" title="{}">{}</span></td>'.format(
-            amt_full, cur_str
-        )
+        f'<td><span class="copyable-amount" title="{amt_full}">{cur_str}</span></td>'
     )
 
     if show_price:
         if amt.commodity.price:
             result.append(
-                "<td>{{{}}}</td>".format(filter_commodity_positive(amt.commodity.price))
+                f"<td>{{{filter_commodity_positive(amt.commodity.price)}}}</td>"
             )
         else:
             result.append("<td></td>")
@@ -767,5 +751,5 @@ def debug_imbalances():
 
 # Load extensions
 for ext_name in config["extensions"]:
-    with open(ext_name, "r") as f:
+    with open(ext_name) as f:
         exec(f.read())

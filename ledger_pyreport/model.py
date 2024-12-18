@@ -14,13 +14,13 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .config import config
-
-from decimal import Decimal
-from enum import Enum
 import functools
 import itertools
 import math
+from decimal import Decimal
+from enum import Enum
+
+from .config import config
 
 
 class Ledger:
@@ -70,9 +70,7 @@ class Ledger:
 
         if not prices:
             raise Exception(
-                "No price information for {} to {} at {:%Y-%m-%d}".format(
-                    commodity_from, commodity_to, date
-                )
+                f"No price information for {commodity_from} to {commodity_to} at {date:%Y-%m-%d}"
             )
 
         return max(prices, key=lambda p: p[0])[2]
@@ -104,17 +102,17 @@ class Transaction:
         self.postings = []
 
     def __repr__(self):
-        return '<Transaction {} "{}">'.format(self.id, self.description)
+        return f'<Transaction {self.id} "{self.description}">'
 
     @property
     def has_comment_detail(self):
         return any(p.comment for p in self.postings)
 
     def describe(self):
-        result = ["{:%Y-%m-%d} {}".format(self.date, self.description)]
+        result = [f"{self.date:%Y-%m-%d} {self.description}"]
         for posting in self.postings:
             result.append(
-                "    {}  {}".format(posting.account.name, posting.amount.tostr(False))
+                f"    {posting.account.name}  {posting.amount.tostr(False)}"
             )
         return "\n".join(result)
 
@@ -343,7 +341,7 @@ class Posting:
         self.state = state
 
     def __repr__(self):
-        return '<Posting "{}" {}>'.format(self.account.name, self.amount.tostr(False))
+        return f'<Posting "{self.account.name}" {self.amount.tostr(False)}>'
 
     def exchange(self, commodity):
         if self.amount.commodity.name == commodity.name:
@@ -366,7 +364,7 @@ class Account:
         self.children = []
 
     def __repr__(self):
-        return "<Account {}>".format(self.name)
+        return f"<Account {self.name}>"
 
     @property
     def bits(self):
@@ -443,11 +441,11 @@ class Amount:
             )
 
         if self.commodity.price:
-            return "{} {{{}}}".format(amount_str, self.commodity.price.tostr(round))
+            return f"{amount_str} {{{self.commodity.price.tostr(round)}}}"
         return amount_str
 
     def __repr__(self):
-        return "<Amount {}>".format(self.tostr(False))
+        return f"<Amount {self.tostr(False)}>"
 
     def __str__(self):
         return self.tostr()
@@ -458,9 +456,7 @@ class Amount:
             if isinstance(other, Amount):
                 if other.commodity != self.commodity:
                     raise TypeError(
-                        "Cannot combine Amounts of commodity {} and {}".format(
-                            self.commodity.name, other.commodity.name
-                        )
+                        f"Cannot combine Amounts of commodity {self.commodity.name} and {other.commodity.name}"
                     )
                 other = other.amount
             elif other != 0:
@@ -531,9 +527,7 @@ class Amount:
         if isinstance(other, Amount):
             if other.commodity != self.commodity:
                 raise TypeError(
-                    "Cannot combine Amounts of commodity {} and {}".format(
-                        self.commodity.name, other.commodity.name
-                    )
+                    f"Cannot combine Amounts of commodity {self.commodity.name} and {other.commodity.name}"
                 )
             return self.amount / other.amount
         return Amount(self.amount / Decimal(other), self.commodity)
@@ -566,7 +560,7 @@ class Amount:
                 # Measured at historical cost
                 return self.exchange(commodity, True)
 
-        raise TypeError("Cannot exchange {} to {}".format(self.commodity, commodity))
+        raise TypeError(f"Cannot exchange {self.commodity} to {commodity}")
 
     @property
     def near_zero(self):
@@ -618,9 +612,7 @@ class Balance:
         return Balance([-a for a in self.amounts])
 
     def __eq__(self, other):
-        if isinstance(other, Balance):
-            raise Exception("NYI")
-        elif isinstance(other, Amount):
+        if isinstance(other, Balance) or isinstance(other, Amount):
             raise Exception("NYI")
         elif other == 0:
             return all(a == 0 for a in self.amounts)

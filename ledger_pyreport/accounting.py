@@ -14,10 +14,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import csv
 from datetime import timedelta
-from decimal import Decimal
-import math
 
 from .model import *
 
@@ -94,7 +91,7 @@ def trial_balance(ledger, date, pstart, commodity, label=None):
 
                 # Reversing entry
                 trn_reversal = trn.reverse(
-                    None, pstart, "<Reversal of {}>".format(trn.description[1:-1])
+                    None, pstart, f"<Reversal of {trn.description[1:-1]}>"
                 )
                 ledger.transactions.insert(0, trn_reversal)
 
