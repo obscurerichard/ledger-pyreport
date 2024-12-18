@@ -31,17 +31,34 @@ dependencies = [
 dev = [
   "FawltyDeps",
   "uppd",
+  "ruff",
 ]
 
 [tool.setuptools.packages.find]
 exclude = ["demo"]
 
 # Thanks https://stackoverflow.com/a/76435649/424301 for the tip
-#[tool.setuptools.package-data]
-#mypkg = ["*.css", "*.html", "*.css"]
+[tool.setuptools.package-data]
+mypkg = ["*.css", "*.html", "*.css"]
 
 [tool.fawltydeps]
 ignore_unused = [
     "FawltyDeps",
     "uppd",
+]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
 ]
