@@ -1,4 +1,7 @@
 *.egg-info
-__pycache__
+.venv
 /config.yml
 /venv
+__pycache__
+build/
+tmp/
